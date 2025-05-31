@@ -1,0 +1,6 @@
+@its.gamify.api_HostAddress = http://localhost:5131
+
+GET {{its.gamify.api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
