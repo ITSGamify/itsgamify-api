@@ -20,7 +20,6 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
             services.BuildServiceProvider().GetRequiredService<IConfiguration>()
                 .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
-    {
         // services.AddDbContext<AppDbContext>(options => options.USeSqlServer(
         //     services.BuildServiceProvider().GetRequiredService<IConfiguration>()
         //         .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
