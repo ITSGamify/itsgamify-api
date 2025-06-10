@@ -1,4 +1,5 @@
 namespace its.gamify.infras.Datas;
+
 public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
 {
     public AppDbContext(Microsoft.EntityFrameworkCore.DbContextOptions<AppDbContext> options) : base(options)
