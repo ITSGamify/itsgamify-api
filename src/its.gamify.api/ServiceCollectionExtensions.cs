@@ -1,6 +1,7 @@
 using System.Reflection;
 using its.gamify.core.Mappers;
 using its.gamify.infras.Datas;
+using Microsoft.EntityFrameworkCore;
 using Scrutor;
 
 namespace its.gamify.api;
@@ -14,10 +15,11 @@ public static class ServiceCollectionExtensions
     /// <param name="services"></param>
     /// <returns></returns>
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
-    {            
-        // services.AddDbContext<AppDbContext>(options => options.USeSqlServer(
-        //     services.BuildServiceProvider().GetRequiredService<IConfiguration>()
-        //         .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
+    {
+        services.AddHttpContextAccessor();
+        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
+            services.BuildServiceProvider().GetRequiredService<IConfiguration>()
+                .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
         services.Scan(scan =>
         {
             scan.FromAssemblies(getAssemblies())
