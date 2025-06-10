@@ -2,6 +2,7 @@ using System.Security.Claims;
 using its.gamify.core.Services.Interfaces;
 
 namespace its.gamify.api.Services;
+
 public class ClaimsService : IClaimsService
 {
     public ClaimsService(IHttpContextAccessor httpContextAccessor)

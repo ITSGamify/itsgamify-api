@@ -14,10 +14,13 @@ public static class ServiceCollectionExtensions
     /// <param name="services"></param>
     /// <returns></returns>
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
-    {            
+    {
         // services.AddDbContext<AppDbContext>(options => options.USeSqlServer(
         //     services.BuildServiceProvider().GetRequiredService<IConfiguration>()
         //         .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
+
+        services.AddHttpContextAccessor();
+
         services.Scan(scan =>
         {
             scan.FromAssemblies(getAssemblies())
