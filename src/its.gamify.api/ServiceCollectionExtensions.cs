@@ -17,9 +17,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
-        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
-            services.BuildServiceProvider().GetRequiredService<IConfiguration>()
-                .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
+        var conString = services.BuildServiceProvider().GetRequiredService<IConfiguration>()
+            .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseMySql(conString, new MySqlServerVersion(new Version(8, 0, 35)))
+        );
+        Console.WriteLine($"Using connection string: {conString}");
         // services.AddDbContext<AppDbContext>(options => options.USeSqlServer(
         //     services.BuildServiceProvider().GetRequiredService<IConfiguration>()
         //         .GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.")));
@@ -36,6 +40,7 @@ public static class ServiceCollectionExtensions
         });
         // AutoMapper
         services.AddAutoMapper(typeof(MapperConfigurationProfile));
+
         return services;
     }
     private static Assembly[] getAssemblies()
