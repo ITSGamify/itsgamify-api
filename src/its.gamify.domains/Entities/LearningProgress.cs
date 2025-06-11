@@ -6,6 +6,7 @@ public class LearningProgress : BaseEntity
     public DateTime LastAccessed { get; set; } = DateTime.Now;
     public Guid CourseParticipationId { get; set; }
     public virtual CourseParticipation CourseParticipation { get; set; } = null!;
-    public Guid? QuizResultId { get; set; } 
+    public Guid? QuizResultId { get; set; }
     public virtual QuizResult? QuizResult { get; set; } = null!;
+    public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
 }
