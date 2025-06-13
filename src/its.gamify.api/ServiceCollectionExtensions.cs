@@ -1,8 +1,8 @@
-using System.Reflection;
 using its.gamify.core.Mappers;
 using its.gamify.infras.Datas;
 using Microsoft.EntityFrameworkCore;
 using Scrutor;
+using System.Reflection;
 
 namespace its.gamify.api;
 
