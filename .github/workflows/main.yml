@@ -12,16 +12,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Setup .NET SDK
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '8.0.x' # Or your target version
 
-    - name: Restore, Build & Publish
-      run: |
-        dotnet restore
-        dotnet build -c Release --no-restore
-        dotnet publish -c Release -o published
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Publish
+      run: dotnet publish -c Release -o published
 
     - name: Set user-secrets before deployment
       shell: pwsh
@@ -52,6 +55,6 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         port: ${{ secrets.FTP_PORT }}
         local-dir: ./published/
-        server-dir: /wwwroot/
+        server-dir: ${{ secrets.FTP_DESTINATION_FOLDER }}/
         protocol: ftp
         dangerous-clean-slate: true # Optional: deletes everything in /wwwroot before upload
