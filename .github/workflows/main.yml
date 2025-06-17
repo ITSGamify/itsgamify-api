@@ -50,7 +50,7 @@ jobs:
         dotnet user-secrets set "FirebaseConfig:Bucket" "$env:FIREBASECONFIG__BUCKET"
 
     - name: Upload via FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      uses: SamKirkland/FTP-Deploy-Action@4.0.0
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
