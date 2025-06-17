@@ -1,15 +1,17 @@
-name: CI / Build / Deploy
+
+name: Build and Deploy .NET API
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v3
 
     - name: Setup .NET
@@ -58,3 +60,4 @@ jobs:
         server-dir: ${{ secrets.FTP_DESTINATION_FOLDER }}/
         protocol: ftp
         dangerous-clean-slate: true # Optional: deletes everything in /wwwroot before upload
+
