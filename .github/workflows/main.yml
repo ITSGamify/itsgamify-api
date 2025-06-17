@@ -18,16 +18,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x' # Or your target version
-
-    - name: Restore Dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-
-    - name: Publish
-      run: dotnet publish -c Release -o published
-
     - name: Set user-secrets before deployment
       shell: pwsh
       env:
@@ -48,6 +38,15 @@ jobs:
         dotnet user-secrets set "FirebaseConfig:ServiceAccountAdmin" "$env:FIREBASECONFIG__SERVICEACCOUNTADMIN"
         dotnet user-secrets set "FirebaseConfig:ServiceAccountPass" "$env:FIREBASECONFIG__SERVICEACCOUNTPASS"
         dotnet user-secrets set "FirebaseConfig:Bucket" "$env:FIREBASECONFIG__BUCKET"
+
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Publish
+      run: dotnet publish -c Release -o published
 
     - name: Upload via FTP
       uses: SamKirkland/FTP-Deploy-Action@4.0.0
