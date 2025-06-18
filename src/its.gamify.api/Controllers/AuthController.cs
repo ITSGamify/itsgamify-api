@@ -21,8 +21,16 @@ namespace its.gamify.api.Controllers
         [HttpPost]
         public async Task<IActionResult> LoginAsync([FromBody] AuthRequestModel model)
         {
-            var loginRes = await authService.LoginAsync(model.Email, model.Password);
-            return loginRes is not null ? Ok(loginRes) : StatusCode(500);
+            try
+            {
+                var loginRes = await authService.LoginAsync(model.Email, model.Password);
+                return loginRes is not null ? Ok(loginRes) : StatusCode(500);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
         }
     }
 }

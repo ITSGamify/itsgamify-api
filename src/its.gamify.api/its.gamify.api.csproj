@@ -27,4 +27,7 @@
     <ProjectReference Include="..\its.gamify.core\its.gamify.core.csproj" />
     <ProjectReference Include="..\its.gamify.infras\its.gamify.infras.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\Courses\" />
+  </ItemGroup>
 </Project>
