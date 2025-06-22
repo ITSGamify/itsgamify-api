@@ -1,62 +1,38 @@
-
-name: Build and Deploy .NET API
+name: 🚀 CI/CD Deploy to MonsterASP
 
 on:
   push:
     branches:
-      - main
+      - main # or master
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
 
-    - name: Setup .NET
+    - name: 🛠 Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x' # Or your target version
-    - name: Set user-secrets before deployment
-      shell: pwsh
-      env:
-        CONNECTIONSTRINGS__DEFAULTCONNECTION: ${{ secrets.CONNECTIONSTRINGS__DEFAULTCONNECTION }}
-        FIREBASECONFIG__APIKEY: ${{ secrets.FIREBASECONFIG__APIKEY }}
-        FIREBASECONFIG__SERVICEACCOUNTADMIN: ${{ secrets.FIREBASECONFIG__SERVICEACCOUNTADMIN }}
-        FIREBASECONFIG__SERVICEACCOUNTPASS: ${{ secrets.FIREBASECONFIG__SERVICEACCOUNTPASS }}
-        FIREBASECONFIG__BUCKET: ${{ secrets.FIREBASECONFIG__BUCKET }}
-      run: |
-        cd src/its.gamify.api
+        dotnet-version: '8.x' # or your project version
 
-        # Ensure user secrets is initialized
-        dotnet user-secrets init | Out-Null
-
-        # Set each secret into local user-secrets store
-        dotnet user-secrets set "ConnectionStrings:DefaultConnection" "$env:CONNECTIONSTRINGS__DEFAULTCONNECTION"
-        dotnet user-secrets set "FirebaseConfig:ApiKey" "$env:FIREBASECONFIG__APIKEY"
-        dotnet user-secrets set "FirebaseConfig:ServiceAccountAdmin" "$env:FIREBASECONFIG__SERVICEACCOUNTADMIN"
-        dotnet user-secrets set "FirebaseConfig:ServiceAccountPass" "$env:FIREBASECONFIG__SERVICEACCOUNTPASS"
-        dotnet user-secrets set "FirebaseConfig:Bucket" "$env:FIREBASECONFIG__BUCKET"
-
-    - name: Restore Dependencies
+    - name: 🧱 Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
+    - name: 🏗 Build
+      run: dotnet build --configuration Release
 
-    - name: Publish
-      run: dotnet publish -c Release -o published
+    - name: 🧪 Publish
+      run: dotnet publish -c Release -o publish_output
 
-    - name: Upload via FTP
-      uses: SamKirkland/FTP-Deploy-Action@4.0.0
+    - name: 🚀 Deploy via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        port: ${{ secrets.FTP_PORT }}
-        local-dir: ./published/
-        server-dir:  ./wwwroot/
-        protocol: ftp
-        dangerous-clean-slate: true # Optional: deletes everything in /wwwroot before upload
-
+        server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+        local-dir: publish_output
+        dangerous-clean-slate: true # optional: clears remote dir first
