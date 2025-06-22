@@ -33,6 +33,6 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-        local-dir: publish_output
+        server-dir: ${{ secrets.FTP_REMOTE_DIR }}/
+        local-dir: publish_output/
         dangerous-clean-slate: true # optional: clears remote dir first
