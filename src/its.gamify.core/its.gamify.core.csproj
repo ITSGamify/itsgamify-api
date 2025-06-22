@@ -10,6 +10,12 @@
     <ProjectReference Include="..\its.gamify.domains\its.gamify.domains.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Courses\Commands\" />
+    <Folder Include="Features\Departments\Commands\" />
+    <Folder Include="Features\Departments\Queries\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

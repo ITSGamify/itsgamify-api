@@ -1,7 +1,9 @@
-﻿using its.gamify.core.Models.Departments;
+﻿using its.gamify.core.Features.AvailablesData;
+using its.gamify.core.Models.Departments;
 using its.gamify.core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -12,9 +14,11 @@ namespace its.gamify.api.Controllers
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
-        public DepartmentController(IDepartmentService DepartmentService)
+        private Ultils data;
+        public DepartmentController(IDepartmentService DepartmentService, Ultils data)
         {
             _departmentService = DepartmentService;
+            this.data = data;
         }
         /// <summary>
         /// Delete Department
@@ -36,14 +40,12 @@ namespace its.gamify.api.Controllers
                                         [FromQuery] string searchTerm = ""
                                         )
         {
-            var result = await _departmentService.GetAll(pageNumber, pageSize, searchTerm);
-            if (result.Count() > 0) { return Ok(result); }
-            else return BadRequest();
+            return Ok(data.courses);
 
         }
 
         /// <summary>
-        /// Update product
+        /// Update department
         /// </summary>
         [HttpPut]
         public async Task<IActionResult> Update([FromForm] DepartmentUpdateModel updatedItem)
@@ -54,12 +56,12 @@ namespace its.gamify.api.Controllers
         }
 
         /// <summary>
-        /// Create product
+        /// Create department
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] DepartmentCreateModel createItem)
         {
-            /*createProductDTO.File = formFile;*/
+            /*createdepartmentDTO.File = formFile;*/
             var result = await _departmentService.Create(createItem);
             if (result is null)
             {
@@ -71,7 +73,7 @@ namespace its.gamify.api.Controllers
 
 
         /// <summary>
-        /// Get product by Id
+        /// Get department by Id
         /// </summary>
         [Authorize]
         [HttpGet("{id}")]
