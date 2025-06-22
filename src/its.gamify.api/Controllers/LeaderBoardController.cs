@@ -7,15 +7,15 @@ namespace its.gamify.api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class QuestionController : ControllerBase
+    public class LeaderBoardController : ControllerBase
     {
         private Ultils data;
-        public QuestionController(Ultils data)
+        public LeaderBoardController(Ultils data)
         {
             this.data = data;
         }
         /// <summary>
-        /// Get all question
+        /// Get all leader board
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 0,
@@ -23,7 +23,7 @@ namespace its.gamify.api.Controllers
                                         [FromQuery] string searchTerm = ""
                                         )
         {
-            return Ok(data.questions);
+            return Ok(data.leaderBoards);
 
         }
     }

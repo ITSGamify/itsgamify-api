@@ -1,4 +1,5 @@
-﻿using its.gamify.domains.Entities;
+﻿using Firebase.Auth;
+using its.gamify.domains.Entities;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using System.Text.Json;
 
@@ -39,6 +40,43 @@ namespace its.gamify.core.Features.AvailablesData
                     UpdatedBy = Guid.NewGuid()
                 });
             }
+            for (int i = 1; i <= 10; i++)
+            {
+                leaderBoards.Add(new LeadearBoard
+                {
+                    Name = $"LeaderBoard {i}",
+                    Description = $"Description for LeaderBoard {i}."
+                });
+            }
+            for (int i = 1; i <= 10; i++)
+            {
+                badges.Add(new Badge
+                {
+                    Name = $"Badge {i}",
+                    Description = $"Description for Badge {i}.",
+                    ClaimedDate = DateTime.Now.AddDays(-i), // Ngày được trao giảm dần
+                    UserId = Guid.NewGuid(),
+                });
+            }
+            for (int i = 1; i <= 10; i++)
+            {
+                employeeMetrics.Add(new EmployeeMetric
+                {
+                    Description = $"Employee Metric for User {i}.",
+                    UserId = Guid.NewGuid()
+                });
+            }
+            for (int i = 1; i <= 10; i++)
+            {
+                notifications.Add(new Notification
+                {
+                    Title = $"Notification {i}",
+                    Message = $"Message for Notification {i}.",
+                    Precedence = i, // Độ ưu tiên tăng dần
+                    UserId = Guid.NewGuid()
+                });
+            }
+
         }
         private readonly string _filePath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "Feature", "AvailableData.json");
         public List<Quarter> quarters;
@@ -48,6 +86,10 @@ namespace its.gamify.core.Features.AvailablesData
         public List<Course> courses;
         public List<Department> departments;
         public List<Category> categories;
+        public List<LeadearBoard> leaderBoards = new List<LeadearBoard>();
+        public List<Badge> badges = new List<Badge>();
+        public List<EmployeeMetric> employeeMetrics = new List<EmployeeMetric>();
+        public List<Notification> notifications = new List<Notification>();
         public Ultils()
         {
             AddList();

@@ -1,21 +1,20 @@
 ﻿using its.gamify.core.Features.AvailablesData;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace its.gamify.api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class QuestionController : ControllerBase
+    public class EmployeeMetricsController : ControllerBase
     {
         private Ultils data;
-        public QuestionController(Ultils data)
+        public EmployeeMetricsController(Ultils data)
         {
             this.data = data;
         }
         /// <summary>
-        /// Get all question
+        /// Get all employee metrics
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 0,
@@ -23,7 +22,7 @@ namespace its.gamify.api.Controllers
                                         [FromQuery] string searchTerm = ""
                                         )
         {
-            return Ok(data.questions);
+            return Ok(data.employeeMetrics);
 
         }
     }
