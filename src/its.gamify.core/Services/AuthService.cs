@@ -12,11 +12,20 @@ namespace its.gamify.core.Services
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly AppSetting appSetting;
+
         public AuthService(IUnitOfWork unitOfWork, IServiceProvider serviceProvider)
         {
             this.appSetting = serviceProvider.CreateScope().ServiceProvider.GetRequiredService<AppSetting>();
             this.unitOfWork = unitOfWork;
 
+        }
+
+        public async Task<User?> GetUserAsync(string email, string password, CancellationToken cancellationToken)
+        {
+            var auth = new FirebaseAuthProvider(new Firebase.Auth.FirebaseConfig(appSetting.FirebaseConfig.ApiKey));
+            var user = await auth.SignInWithEmailAndPasswordAsync(email, password);
+
+            return user.User;
         }
 
         public async Task<AuthResponseModel> LoginAsync(string email, string password, CancellationToken cancellationToken)
@@ -26,6 +35,7 @@ namespace its.gamify.core.Services
             var userInDb = await unitOfWork.UserRepository.FirstOrDefaultAsync(x => x.Email == email, includes: x => x.Role!);
             if (user is not null && userInDb is not null)
             {
+
                 string newToken = TokenGenerator.GenerateToken(user: userInDb, role: userInDb.Role?.Name ?? string.Empty);
                 return new AuthResponseModel
                 {
