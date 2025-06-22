@@ -10,6 +10,10 @@
     <ProjectReference Include="..\its.gamify.domains\its.gamify.domains.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\NewFolder\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
