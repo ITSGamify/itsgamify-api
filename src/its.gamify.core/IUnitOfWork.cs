@@ -10,7 +10,8 @@ namespace its.gamify.core
         public ICourseRepository CourseRepository { get; }
         public IDepartmentRepository DepartmentRepository { get; }
         public IUserRepository UserRepository { get; }
-
+        public IPracticeTagRepository PracticeTagRepository { get; }
+        public IPracticeRepository PracticeRepository { get; }
         Task<bool> SaveChangesAsync();
         Task SeedData();
     }
