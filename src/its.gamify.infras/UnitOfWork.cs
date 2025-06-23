@@ -14,6 +14,9 @@ namespace its.gamify.infras
         private readonly IDepartmentRepository _departmentRepository;
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository roleRepository;
+        private readonly IPracticeRepository _practiceRepository;
+        private readonly IPracticeTagRepository practiceTagRepository;
+
         private readonly IMapper mapper;
         public UnitOfWork(AppDbContext dbContext, ICourseRepository courseRepository, IDepartmentRepository departmentRepository,
             IServiceProvider serviceProvider)
@@ -23,6 +26,8 @@ namespace its.gamify.infras
             mapper = serviceProvider.GetRequiredService<IMapper>();
             _appDbContext = dbContext;
             _courseRepository = courseRepository;
+            practiceTagRepository = serviceProvider.GetRequiredService<IPracticeTagRepository>();
+            _practiceRepository = serviceProvider.GetRequiredService<IPracticeRepository>();
             _departmentRepository = departmentRepository;
         }
         public ICourseRepository CourseRepository => _courseRepository;
@@ -30,6 +35,8 @@ namespace its.gamify.infras
         public IUserRepository UserRepository => _userRepository;
         public IDepartmentRepository DepartmentRepository => _departmentRepository;
         public IRoleRepository RoleRepository => roleRepository;
+        public IPracticeRepository PracticeRepository => _practiceRepository;
+        public IPracticeTagRepository PracticeTagRepository => practiceTagRepository;
         public async Task<bool> SaveChangesAsync()
         => await _appDbContext.SaveChangesAsync() > 0;
 

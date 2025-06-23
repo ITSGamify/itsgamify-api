@@ -8,6 +8,9 @@ namespace its.gamify.api.Features.Users.Queries
     public class GetAllUserQuery : IRequest<BasePagingResponseModel<UserViewModel>>
     {
 
+        public int PageIndex { get; set; }
+        public int PageSize { get; set; }
+
         class QueryHandler : IRequestHandler<GetAllUserQuery, BasePagingResponseModel<UserViewModel>>
         {
             private readonly IUnitOfWork unitOfWork;
@@ -17,7 +20,10 @@ namespace its.gamify.api.Features.Users.Queries
             }
             public async Task<BasePagingResponseModel<UserViewModel>> Handle(GetAllUserQuery request, CancellationToken cancellationToken)
             {
-                var res = await unitOfWork.UserRepository.ToPagination(includes: x => x.Department!);
+                var res = await unitOfWork.UserRepository.ToPagination(
+                    pageIndex: request.PageIndex,
+                    pageSize: request.PageSize,
+                     includes: x => x.Department!);
                 var resModel = unitOfWork.Mapper.Map<List<UserViewModel>>(res.Item2);
                 return new BasePagingResponseModel<UserViewModel>(datas: resModel, pagination: res.Item1);
             }

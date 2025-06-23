@@ -10,6 +10,12 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>1701;1702;1591</NoWarn>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="Models\**" />
+	  <Content Remove="Models\**" />
+	  <EmbeddedResource Remove="Models\**" />
+	  <None Remove="Models\**" />
+	</ItemGroup>
   <ItemGroup>
 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
@@ -26,8 +32,5 @@
     <ProjectReference Include="..\its.gamify.infras\its.gamify.infras.csproj" />
     <ProjectReference Include="..\its.gamify.core\its.gamify.core.csproj" />
     <ProjectReference Include="..\its.gamify.infras\its.gamify.infras.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\Courses\" />
   </ItemGroup>
 </Project>

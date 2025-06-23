@@ -60,7 +60,7 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
 
     #region Pagination Methods
 
-    Task<(Pagination, List<TEntity>)> ToPagination(
+    Task<(Pagination Pagination, List<TEntity> Entities)> ToPagination(
         int pageIndex = 0,
         int pageSize = 10,
         bool withDeleted = false,
