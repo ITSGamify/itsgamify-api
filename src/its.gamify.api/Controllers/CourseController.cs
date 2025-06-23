@@ -1,10 +1,10 @@
-﻿using its.gamify.core.Models.Courses;
+﻿using its.gamify.api.Features.Users.Queries;
+using its.gamify.core.Features.AvailablesData;
+using its.gamify.core.Models.Courses;
 using its.gamify.core.Services.Interfaces;
-using its.gamify.domains.Enums;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
 
 namespace its.gamify.api.Controllers
 {
@@ -13,9 +13,13 @@ namespace its.gamify.api.Controllers
     public class CourseController : ControllerBase
     {
         private readonly ICourseService _courseService;
-        public CourseController(ICourseService courseService)
+        private readonly IMediator mediator;
+        private Ultils data;
+        public CourseController(ICourseService courseService, IMediator mediator, Ultils data)
         {
             _courseService = courseService;
+            this.mediator = mediator;
+            this.data = data;
         }
         /// <summary>
         /// Delete course
@@ -37,14 +41,14 @@ namespace its.gamify.api.Controllers
                                         [FromQuery] string searchTerm=""
                                         )
         {
-            var result = await _courseService.GetAll(pageNumber,pageSize,searchTerm);
-            if (result.Count() > 0) { return Ok(result); }
-            else return BadRequest();
+            return Ok(data.courses);
+            /*if (result.Count() > 0) { return Ok(result); }
+            else return BadRequest();*/
 
         }
 
         /// <summary>
-        /// Update product
+        /// Update course
         /// </summary>
         [HttpPut]
         public async Task<IActionResult> Update([FromForm] CourseUpdateModel updatedItem)
@@ -55,12 +59,12 @@ namespace its.gamify.api.Controllers
         }
 
         /// <summary>
-        /// Create product
+        /// Create course
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] CourseCreateModel createItem)
         {
-            /*createProductDTO.File = formFile;*/
+            /*createcourseDTO.File = formFile;*/
             var result = await _courseService.Create(createItem);
             if (result is null)
             {
@@ -72,7 +76,7 @@ namespace its.gamify.api.Controllers
 
 
         /// <summary>
-        /// Get product by Id
+        /// Get course by Id
         /// </summary>
         [Authorize]
         [HttpGet("{id}")]
