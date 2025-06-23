@@ -19,6 +19,6 @@ namespace its.gamify.core.Features.PracticeTags.Queries
                 return await unitOfWork.PracticeTagRepository.GetByIdAsync(request.Id, false, cancellationToken)
                     ?? throw new InvalidOperationException("Không tìm thấy practice tag với Id: " + request.Id);
             }
+            }
         }
     }
-}
