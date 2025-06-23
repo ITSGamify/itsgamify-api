@@ -298,7 +298,7 @@ public class GenericRepository<TEntity>(
 
     #region Pagination Methods
 
-    public async Task<(Pagination, List<TEntity>)> ToPagination(
+    public async Task<(Pagination Pagination, List<TEntity> Entities)> ToPagination(
         int pageIndex = 0,
         int pageSize = 10,
         bool withDeleted = false,

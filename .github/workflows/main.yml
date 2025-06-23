@@ -24,6 +24,21 @@ jobs:
     - name: 🏗 Build
       run: dotnet build --configuration Release
 
+    - name: 🔑 Inject secrets into appsettings.json
+      run: |
+        $appSettingsPath = 'src/its.gamify.api/appsettings.json'
+        (Get-Content $appSettingsPath) -replace '"DefaultConnection": ""', '"DefaultConnection": "${{ secrets.DEFAULT_CONNECTION }}"' |
+        Set-Content $appSettingsPath
+        (Get-Content $appSettingsPath) -replace '"Bucket": ""', '"Bucket": "${{ secrets.FIREBASE_BUCKET }}"' |
+        Set-Content $appSettingsPath
+        (Get-Content $appSettingsPath) -replace '"ServiceAccountAdmin": ""', '"ServiceAccountAdmin": "${{ secrets.FIREBASE_ADMIN }}"' |
+        Set-Content $appSettingsPath
+        (Get-Content $appSettingsPath) -replace '"ServiceAccountPass": ""', '"ServiceAccountPass": "${{ secrets.FIREBASE_PASS }}"' |
+        Set-Content $appSettingsPath
+        (Get-Content $appSettingsPath) -replace '"ApiKey" : ""', '"ApiKey" : "${{ secrets.FIREBASE_APIKEY }}"' |
+        Set-Content $appSettingsPath
+      shell: pwsh
+
     - name: 🧪 Publish
       run: dotnet publish -c Release -o publish_output
 
