@@ -361,6 +361,134 @@ public class GenericRepository<TEntity>(
     #endregion
 
     #region Pagination Methods
+    public async Task<(Pagination Pagination, List<TEntity> Entities)> ToDynamicPagination(
+    int pageIndex = 0,
+    int pageSize = 10,
+    bool withDeleted = false,
+    string? searchTerm = null,
+    List<string>? searchFields = null,
+    Dictionary<string, bool>? sortOrders = null,
+    CancellationToken cancellationToken = default,
+    params Expression<Func<TEntity, object>>[] includes)
+    {
+        pageIndex = Math.Max(0, pageIndex);
+        pageSize = Math.Max(1, pageSize);
+
+        IQueryable<TEntity> query = _dbSet.AsQueryable();
+
+        // Apply includes
+        if (includes != null)
+        {
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+        }
+
+        // Apply soft delete filter
+        if (!withDeleted)
+        {
+            var parameter = Expression.Parameter(typeof(TEntity), "x");
+            var deletedProperty = Expression.Property(parameter, "IsDeleted");
+            var notDeleted = Expression.Equal(deletedProperty, Expression.Constant(false));
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(notDeleted, parameter);
+
+            query = query.Where(lambda);
+        }
+
+        //// Apply dynamic search
+        //if (searchTerms != null && searchTerms.Any())
+        //{
+        //    var parameter = Expression.Parameter(typeof(TEntity), "x");
+        //    Expression? combined = null;
+
+        //    foreach (var term in searchTerms)
+        //    {
+        //        var property = Expression.Property(parameter, term.Key);
+        //        var toStringCall = Expression.Call(property, "ToString", null);
+        //        var containsCall = Expression.Call(
+        //            toStringCall,
+        //            typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
+        //            Expression.Constant(term.Value)
+        //        );
+
+        //        combined = combined == null ? containsCall : Expression.AndAlso(combined, containsCall);
+        //    }
+
+        //    var lambda = Expression.Lambda<Func<TEntity, bool>>(combined!, parameter);
+        //    query = query.Where(lambda);
+        //}
+        if (!string.IsNullOrWhiteSpace(searchTerm) && searchFields != null)
+        {
+            var parameter = Expression.Parameter(typeof(TEntity), "x");
+            Expression? combined = null;
+
+            foreach (var field in searchFields)
+            {
+                var property = Expression.Property(parameter, field);
+
+                // Only apply search if the property is of type string
+                if (property.Type != typeof(string)) continue;
+
+                var containsCall = Expression.Call(
+                    property,
+                    typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
+                    Expression.Constant(searchTerm)
+                );
+
+                combined = combined == null ? containsCall : Expression.OrElse(combined, containsCall);
+            }
+
+            if (combined != null)
+            {
+                var lambda = Expression.Lambda<Func<TEntity, bool>>(combined, parameter);
+                query = query.Where(lambda);
+            }
+        }
+        // Apply composite sorting
+        if (sortOrders != null && sortOrders.Any())
+        {
+            IOrderedQueryable<TEntity>? orderedQuery = null;
+
+            foreach (var sort in sortOrders)
+            {
+                var parameter = Expression.Parameter(typeof(TEntity), "x");
+                var property = Expression.Property(parameter, sort.Key);
+                var converted = Expression.Convert(property, typeof(object));
+                var lambda = Expression.Lambda<Func<TEntity, object>>(converted, parameter);
+
+                if (orderedQuery == null)
+                {
+                    orderedQuery = sort.Value
+                        ? query.OrderByDescending(lambda)
+                        : query.OrderBy(lambda);
+                }
+                else
+                {
+                    orderedQuery = sort.Value
+                        ? orderedQuery.ThenByDescending(lambda)
+                        : orderedQuery.ThenBy(lambda);
+                }
+            }
+
+            query = orderedQuery ?? query;
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var pagination = new Pagination
+        {
+            PageIndex = pageIndex,
+            PageSize = pageSize,
+            TotalItemsCount = totalCount,
+        };
+
+        return (pagination, items);
+    }
 
     public async Task<(Pagination Pagination, List<TEntity> Entities)> ToPagination(
         int pageIndex = 0,

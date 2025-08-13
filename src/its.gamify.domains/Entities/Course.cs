@@ -13,7 +13,7 @@ public class Course : BaseEntity
     [JsonPropertyName("description")]
     public string LongDescription { get; set; } = string.Empty;
     [JsonPropertyName("classify")]
-    public CourseTypeEnum CourseType { get; set; } = CourseTypeEnum.All;
+    public string CourseType { get; set; } = CourseTypeEnum.ALL.ToString();
     [JsonPropertyName("tags")]
     public List<string> Tags { get; set; } = [];
     [JsonPropertyName("targets")]
@@ -26,11 +26,13 @@ public class Course : BaseEntity
     [JsonPropertyName("thumbnail_image")]
     public string ThumbnailImage { get; set; }
 
-    [JsonIgnore]
+    [JsonPropertyName("thumbnail_image_id")]
     public Guid ThumbnailId { get; set; } = Guid.Empty;
-    [JsonIgnore]
+    [JsonPropertyName("intro_video_id")]
     public Guid IntroVideoId { get; set; } = Guid.Empty;
-    public string Status { get; set; } = CourseStatusEnum.Initial.ToString();
+    [JsonPropertyName("drafted")]
+    public bool IsDraft { get; set; } = false;
+    public string Status { get; set; } = CourseStatusEnum.INITIAL.ToString();
 
     public virtual ICollection<CourseResult> CourseResults { get; set; } = [];
     public virtual ICollection<CourseParticipation> CourseParticipations { get; set; } = [];

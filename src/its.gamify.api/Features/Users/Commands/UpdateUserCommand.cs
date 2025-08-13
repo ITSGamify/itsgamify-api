@@ -25,7 +25,7 @@ namespace its.gamify.api.Features.Users.Commands
                 {
                     unitOfWork.Mapper.Map(request.Model, user);
                     unitOfWork.UserRepository.Update(user);
-                    if (user.Role?.Name == RoleEnum.Leader.ToString())
+                    if (user.Role?.Name == RoleEnum.LEADER.ToString())
                     {
 
                     }

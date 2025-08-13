@@ -15,9 +15,9 @@ namespace its.gamify.core.Models.Lessons
         public int DurationInMinutes { get; set; }
         [JsonPropertyName("video_url")]
         public string? VideoUrl { get; set; } = string.Empty;
-        public string Type { get; set; } = LearningMaterialType.Video.ToString();
+        public string Type { get; set; } = LearningMaterialType.VIDEO.ToString();
         [JsonPropertyName("quiz")]
         public List<QuestionUpsertModel>? QuestionModels { get; set; }
-        public string Content { get; set; } = string.Empty;
+        public string? Content { get; set; }
     }
 }

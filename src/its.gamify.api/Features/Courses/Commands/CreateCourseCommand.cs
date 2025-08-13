@@ -3,6 +3,7 @@ using its.gamify.api.Features.CourseSections.Commands;
 using its.gamify.core;
 using its.gamify.core.IntegrationServices.Interfaces;
 using its.gamify.core.Models.Courses;
+using its.gamify.core.Utilities;
 using its.gamify.domains.Entities;
 using its.gamify.domains.Enums;
 using MediatR;
@@ -16,10 +17,8 @@ namespace its.gamify.api.Features.Courses.Commands
         {
             public CommandValidation()
             {
-                RuleFor(x => x.CategoryId).NotNull().NotEmpty();
-                RuleFor(x => x.DepartmentId).NotNull().NotEmpty();
-
-
+                RuleFor(x => x.CategoryId).NotNull().NotEmpty().WithMessage("Vui lòng nhập category id");
+                RuleFor(x => x.DepartmentId).NotNull().NotEmpty().WithMessage($"Vui lòng nhập deparment id");
             }
         }
         class CommandHandler : IRequestHandler<CreateCourseCommand, Course>
@@ -39,14 +38,15 @@ namespace its.gamify.api.Features.Courses.Commands
             private async Task<Quarter> UpsertQuarter(DateTime datetime)
             {
                 var quater = await unitOfWork.QuarterRepository.FirstOrDefaultAsync(x => x.StartDate >= datetime && datetime <= x.EndDate);
+                var item = DateTimeUtilities.GetQuarterDates(datetime.Year, datetime.Month);
                 if (quater is null)
                 {
                     // Create new 
                     quater = new Quarter()
                     {
                         Name = $"Quý {(int)(datetime.Month / 4) + 1} {datetime.Year}",
-                        StartDate = datetime,
-                        EndDate = datetime.AddMonths(3),
+                        StartDate = item.StartDate,
+                        EndDate = item.EndDate,
                     };
                     unitOfWork.QuarterRepository.AddAsync(quater);
                     await unitOfWork.SaveChangesAsync();

@@ -5,7 +5,7 @@ namespace its.gamify.domains.Entities;
 public class CourseParticipation : BaseEntity
 {
     public DateTime EnrolledDate { get; set; }
-    public string Status { get; set; } = CourseParticipationStatusEnum.Inprogress.ToString();
+    public string Status { get; set; } = CourseParticipationStatusEnum.INPROGRESS.ToString();
 
     public Guid UserId { get; set; }
     public virtual User User { get; set; } = null!;

@@ -10,13 +10,14 @@ using its.gamify.core.Features.LearningMaterials.Queries;
 using its.gamify.core.Models.Courses;
 using its.gamify.core.Models.CourseSections;
 using its.gamify.core.Models.LearningMaterials;
+using its.gamify.core.Models.ShareModels;
 using its.gamify.core.Services.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
- namespace its.gamify.api.Controllers
- {
-    [Route("api/[controller]")]
+namespace its.gamify.api.Controllers
+{
+    [Route("api/[controller]s")]
     [ApiController]
     public class CourseController : ControllerBase
     {
@@ -44,15 +45,11 @@ using Microsoft.AspNetCore.Mvc;
         /// Get all course
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 0,
-                                        [FromQuery] int pageSize = 10,
-                                        [FromQuery] string searchTerm = ""
-                                        )
+        public async Task<IActionResult> GetAll([FromQuery] FilterQuery query)
         {
             var res = await mediator.Send(new GetAllCourseQuery()
             {
-                PageIndex = pageNumber,
-                PageSize = pageSize,
+                filterQuery = query
             });
             return Ok(res);
             /*if (result.Count() > 0) { return Ok(result); }

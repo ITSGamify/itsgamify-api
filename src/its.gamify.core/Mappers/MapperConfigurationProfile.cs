@@ -20,6 +20,8 @@ public class MapperConfigurationProfile : Profile
         #region Users
         CreateMap<User, UserViewModel>()
             .ForMember(x => x.DeptName, cfg => cfg.MapFrom(x => (x.Department!.Name ?? string.Empty)))
+            .ForMember(x => x.FullName, cfg => cfg.MapFrom(x => $"{x.LastName} {x.FirstName}"))
+            .ForMember(x => x.RoleName, cfg => cfg.MapFrom(x => x.Role!.Name))
             .ReverseMap();
         CreateMap<User, UserUpdateModel>().ReverseMap();
         CreateMap<User, UserCreateModel>().ForMember(x => x.DeptId, cfg => cfg.MapFrom(x => x.DepartmentId))

@@ -2,24 +2,23 @@ namespace its.gamify.domains.Enums;
 
 public enum CourseParticipationStatusEnum
 {
-    Enrolled = 1,
-    Inprogress = 2,
-    Completed = 3,
-    Failed = 4,
-    Withdrawn = 5
+    ENROLLED = 1,
+    INPROGRESS = 2,
+    COMPLETED = 3,
+    FAILED = 4,
+    WITHDRAWN = 5
 }
 public enum CourseStatusEnum
 {
-    Initial,
-    BaseContent,
-    Material,
-    Confirmed,
-    Drafted,
-    Published
+    INITIAL,
+    CONTENT,
+    MATERIAL,
+    CONFIRM,
+    PUBLISHED
 }
 public enum CourseTypeEnum
 {
-    LeaderOnly,
-    All,
-    DepartmentOnly
+    LEADERONLY,
+    ALL,
+    DEPARTMENTONLY
 }

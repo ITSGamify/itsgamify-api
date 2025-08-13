@@ -9,7 +9,7 @@ namespace its.gamify.core.Models.Courses
 
         public string Title { get; set; } = string.Empty;
         [JsonPropertyName("classify")]
-        public CourseTypeEnum CourseType { get; set; } = CourseTypeEnum.All;
+        public CourseTypeEnum CourseType { get; set; } = CourseTypeEnum.ALL;
         [JsonPropertyName("short_description")]
         public string Description { get; set; } = string.Empty;
         [JsonPropertyName("description")]

@@ -10,7 +10,7 @@ public class Lesson : BaseEntity
     public string? Content { get; set; }
     [JsonPropertyName("duration")]
     public int DurationInMinutes { get; set; }
-    public string Type { get; set; } = LearningMaterialType.Video.ToString(); // e.g., Video, Article, Quiz
+    public string Type { get; set; } = LearningMaterialType.VIDEO.ToString(); // e.g., Video, Article, Quiz
     [JsonPropertyName("video_url")]
     public string? Url { get; set; } = string.Empty; // Link to the lesson material
 

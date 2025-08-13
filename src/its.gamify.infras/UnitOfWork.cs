@@ -43,11 +43,11 @@ namespace its.gamify.infras
         public UnitOfWork(AppDbContext dbContext, ICourseRepository courseRepository, IDepartmentRepository departmentRepository,
             IServiceProvider serviceProvider)
         {
+            _fileRepository = serviceProvider.GetRequiredService<IFileRepository>();
             roleRepository = serviceProvider.GetRequiredService<IRoleRepository>();
             _userRepository = serviceProvider.GetRequiredService<IUserRepository>();
             mapper = serviceProvider.GetRequiredService<IMapper>();
             _appDbContext = dbContext;
-            _fileRepository = serviceProvider.GetRequiredService<IFileRepository>();
             learningMaterialRepository = serviceProvider.GetRequiredService<ILearningMaterialRepository>();
             _courseRepository = courseRepository;
             practiceTagRepository = serviceProvider.GetRequiredService<IPracticeTagRepository>();
@@ -97,12 +97,12 @@ namespace its.gamify.infras
         public IQuarterRepository QuarterRepository => _quarterRepository;
         public IQuestionRepository QuestionRepository => _questionRepository;
         public IQuizRepository QuizRepository => _quizRepository;
+        public IFileRepository FileRepository => _fileRepository;
         public IQuizAnswerRepository QuizAnswerRepository => _quizAnswerRepository;
         public IQuizResultRepository QuizResultRepository => _quizResultRepository;
         public IChallengeRepository ChallengeRepository => _challengeRepository;
         public ILearningMaterialRepository LearningMaterialRepository => learningMaterialRepository;
         public IChallengeParticipationRepository ChallengeParticipationRepository => _challengeParticipationRepository;
-        public IFileRepository FileRepository => _fileRepository;
         public async Task<bool> SaveChangesAsync()
         => await _appDbContext.SaveChangesAsync() > 0;
 

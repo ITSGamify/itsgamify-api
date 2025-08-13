@@ -56,20 +56,20 @@ public class AppDbContext : Microsoft.EntityFrameworkCore.DbContext
         Role[] roles = [new Role()
         {
             Id = Guid.Parse("71874fd3-1892-4d92-a77f-c85c0d16b8db"),
-            Name = RoleEnum.Employee.ToString()
+            Name = RoleEnum.EMPLOYEE.ToString()
         }, new Role()
         {
                 Id = Guid.Parse("620d170e-c32e-4443-b450-32848c1eb5e9"),
-            Name = RoleEnum.Leader.ToString()
+            Name = RoleEnum.LEADER.ToString()
         }, new Role() {
                 Id = Guid.Parse("3b72db68-b2c6-40d8-859e-b4996f8535a1"),
-            Name = RoleEnum.TrainingStaff.ToString()}, new Role()
+            Name = RoleEnum.TRAININGSTAFF.ToString()}, new Role()
         {
                     Id = Guid.Parse("f7fa7c6b-f76a-4b95-8711-517eb8205a1a"),
-            Name = RoleEnum.Manager.ToString()
+            Name = RoleEnum.MANAGER.ToString()
         }, new Role()
         {     Id = Guid.Parse("b002d347-66b9-4722-9547-5b2165abaa9f"),
-            Name = RoleEnum.Admin.ToString()}];
+            Name = RoleEnum.ADMIN.ToString()}];
 
 
         modelBuilder.Entity<Role>().HasData(roles);

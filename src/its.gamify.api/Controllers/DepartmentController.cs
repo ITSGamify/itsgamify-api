@@ -9,7 +9,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 
 
@@ -49,25 +48,25 @@ namespace its.gamify.api.Controllers
         [ProcessOrderBy]
         public async Task<IActionResult> GetAll([FromQuery] DepartmentQueryDto queryDto)
         {
-            // var query = HttpContext.Request.Query;
+            var query = HttpContext.Request.Query;
 
-            // for (int i = 0; ; i++)
-            // {
-            //     var columnKey = $"order_by[{i}][order_column]";
-            //     var dirKey = $"order_by[{i}][order_dir]";
+            for (int i = 0; ; i++)
+            {
+                var columnKey = $"order_by[{i}][order_column]";
+                var dirKey = $"order_by[{i}][order_dir]";
 
-            //     if (!query.ContainsKey(columnKey))
-            //         break;
+                if (!query.ContainsKey(columnKey))
+                    break;
 
-            //     Console.WriteLine($"columnKey {query[columnKey].ToString()}");
-            //     Console.WriteLine($"dirKey {query[dirKey].ToString()}");
+                Console.WriteLine($"columnKey {query[columnKey].ToString()}");
+                Console.WriteLine($"dirKey {query[dirKey].ToString()}");
 
-            //     queryDto.OrderBy.Add(new OrderByItem
-            //     {
-            //         OrderColumn = query[columnKey].ToString(),
-            //         OrderDir = query.ContainsKey(dirKey) ? query[dirKey].ToString() : "ASC"
-            //     });
-            // }
+                queryDto.OrderBy.Add(new OrderByItem
+                {
+                    OrderColumn = query[columnKey].ToString(),
+                    OrderDir = query.ContainsKey(dirKey) ? query[dirKey].ToString() : "ASC"
+                });
+            }
 
             var result = await _departmentService.GetAll(queryDto);
             return Ok(
@@ -94,7 +93,7 @@ namespace its.gamify.api.Controllers
             }
             else return Ok(result);
         }
-
+    
 
 
         [Authorize]

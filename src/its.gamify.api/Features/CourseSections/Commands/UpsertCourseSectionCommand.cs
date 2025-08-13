@@ -29,7 +29,7 @@ namespace its.gamify.api.Features.CourseSections.Commands
                 CourseSection? current = null;
                 if (isUpdate)
                 {
-                    current = await unitOfWork.CourseSectionRepository.GetByIdAsync(request.CourseId,
+                    current = await unitOfWork.CourseSectionRepository.GetByIdAsync(request.CreateId!.Value,
                         false,
                         cancellationToken,
                         [x => x.Lessons]);

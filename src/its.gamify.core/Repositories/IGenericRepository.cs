@@ -60,7 +60,15 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     #endregion
 
     #region Pagination Methods
-
+    public Task<(Pagination Pagination, List<TEntity> Entities)> ToDynamicPagination(
+        int pageIndex = 0,
+        int pageSize = 10,
+        bool withDeleted = false,
+        string? searchTerm = null,
+        List<string> searchFields = null,
+        Dictionary<string, bool>? sortOrders = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes);
     Task<(Pagination Pagination, List<TEntity> Entities)> ToPagination(
         int pageIndex = 0,
         int pageSize = 10,

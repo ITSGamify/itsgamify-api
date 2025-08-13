@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using its.gamify.infras.Datas;
@@ -12,9 +13,11 @@ using its.gamify.infras.Datas;
 namespace its.gamify.infras.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250627122126_V0_10_Modifylesson_Course_1_3")]
+    partial class V0_10_Modifylesson_Course_1_3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -202,9 +205,8 @@ namespace its.gamify.infras.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("CourseType")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("CourseType")
+                        .HasColumnType("integer")
                         .HasAnnotation("Relational:JsonPropertyName", "classify");
 
                     b.Property<Guid>("CreatedBy")
@@ -1317,56 +1319,56 @@ namespace its.gamify.infras.Migrations
                         {
                             Id = new Guid("71874fd3-1892-4d92-a77f-c85c0d16b8db"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            CreatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(5583),
+                            CreatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(95),
                             Description = "",
                             IsDeleted = false,
-                            Name = "EMPLOYEE",
+                            Name = "Employee",
                             UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            UpdatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(5586)
+                            UpdatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(98)
                         },
                         new
                         {
                             Id = new Guid("620d170e-c32e-4443-b450-32848c1eb5e9"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            CreatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6132),
+                            CreatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(721),
                             Description = "",
                             IsDeleted = false,
-                            Name = "LEADER",
+                            Name = "Leader",
                             UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            UpdatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6132)
+                            UpdatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(722)
                         },
                         new
                         {
                             Id = new Guid("3b72db68-b2c6-40d8-859e-b4996f8535a1"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            CreatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6143),
+                            CreatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(734),
                             Description = "",
                             IsDeleted = false,
-                            Name = "TRAININGSTAFF",
+                            Name = "TrainingStaff",
                             UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            UpdatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6143)
+                            UpdatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(735)
                         },
                         new
                         {
                             Id = new Guid("f7fa7c6b-f76a-4b95-8711-517eb8205a1a"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            CreatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6145),
+                            CreatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(753),
                             Description = "",
                             IsDeleted = false,
-                            Name = "MANAGER",
+                            Name = "Manager",
                             UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            UpdatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6145)
+                            UpdatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(753)
                         },
                         new
                         {
                             Id = new Guid("b002d347-66b9-4722-9547-5b2165abaa9f"),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            CreatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6147),
+                            CreatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(756),
                             Description = "",
                             IsDeleted = false,
-                            Name = "ADMIN",
+                            Name = "Admin",
                             UpdatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            UpdatedDate = new DateTime(2025, 6, 28, 7, 21, 29, 896, DateTimeKind.Utc).AddTicks(6147)
+                            UpdatedDate = new DateTime(2025, 6, 27, 12, 21, 26, 49, DateTimeKind.Utc).AddTicks(756)
                         });
                 });
 
@@ -1375,9 +1377,6 @@ namespace its.gamify.infras.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("AvatarUrl")
-                        .HasColumnType("text");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid")

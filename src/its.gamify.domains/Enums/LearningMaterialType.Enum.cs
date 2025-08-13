@@ -5,26 +5,27 @@ public enum LearningMaterialType
     /// <summary>
     /// Represents a video learning material.
     /// </summary>
-    Video = 1,
+    VIDEO = 1,
 
     /// <summary>
     /// Represents a document learning material.
     /// </summary>
-    Document = 2,
+    DOCUMENT = 2,
 
     /// <summary>
     /// Represents an audio learning material.
     /// </summary>
-    Audio = 3,
+    AUDIO = 3,
 
     /// <summary>
     /// Represents an image learning material.
     /// </summary>
-    Image = 4,
+    IMAGE = 4,
 
     /// <summary>
     /// Represents a link to external content.
     /// </summary>
-    Link = 5, 
-    Undefined = 6
+    LINK = 5,
+    UNDEFINED = 6,
+    QUIZ = 7
 }

@@ -3,16 +3,14 @@ using its.gamify.core.Features.AvailablesData;
 using its.gamify.core.Models.ShareModels;
 using its.gamify.domains.Entities;
 using MediatR;
-using System.Linq.Expressions;
 
 namespace its.gamify.api.Features.Users.Queries
 {
 
     public class GetAllCourseQuery : IRequest<BasePagingResponseModel<Course>>
     {
-        public int PageSize { get; set; }
-        public int PageIndex { get; set; }
-        public string Search { get; set; } = string.Empty;
+        public FilterQuery filterQuery { get; set; }
+
         class QueryHandler : IRequestHandler<GetAllCourseQuery, BasePagingResponseModel<Course>>
         {
             private readonly IUnitOfWork unitOfWork;
@@ -25,13 +23,19 @@ namespace its.gamify.api.Features.Users.Queries
             public async Task<BasePagingResponseModel<Course>> Handle(GetAllCourseQuery request, CancellationToken cancellationToken)
             {
 
-                Expression<Func<Course, bool>>? filter = null;
-                if (!string.IsNullOrEmpty(request.Search))
+                var searchTerm = request.filterQuery.Q;
+
+                // Build sort dictionary from query
+                Dictionary<string, bool> sortOrders = new();
+                if (request.filterQuery.OrderBy != null)
                 {
-                    filter = x => x.Title.Contains(request.Search);
+                    foreach (var order in request.filterQuery.OrderBy)
+                    {
+                        sortOrders[order.OrderColumn] = order.OrderDir.Equals("DESC", StringComparison.OrdinalIgnoreCase);
+                    }
                 }
-                var res = await unitOfWork.CourseRepository.ToPagination(request.PageIndex, request.PageSize, filter: filter, includes: [x => x.Category!,
-                 x => x.Quarter]);
+                var res = await unitOfWork.CourseRepository.ToDynamicPagination(request.filterQuery.Page ?? 0, request.filterQuery.Limit ?? 0, searchTerm: searchTerm, searchFields: ["Title", "Description", "LongDescription"], includes: [x => x.Category!,
+                 x => x.Quarter, x => x.CourseSections], sortOrders: sortOrders);
 
                 return new BasePagingResponseModel<Course>(datas: res.Entities, pagination: res.Pagination);
             }
