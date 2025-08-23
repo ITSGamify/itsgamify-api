@@ -143,8 +143,8 @@ public class GetAllCourseQuery : IRequest<BasePagingResponseModel<Course>>
             else if (value == COURSE_CLASSIFY.SAVED.ToString())
             {
                 if (UserId == Guid.Empty) return x => true;
-                List<Guid> collections = (await unitOfWork.CourseCollectionRepository.GetAllAsync()).Where(x => x.UserId == UserId).Select(x => x.UserId).ToList();
-                return x => collections != null && collections.Count != 0 && collections.Contains(UserId);
+                List<Guid> collections = (await unitOfWork.CourseCollectionRepository.GetAllAsync()).Where(x => x.UserId == UserId).Select(x => x.CourseId).ToList();
+                return x => collections != null && collections.Count != 0 && collections.Contains(x.Id);
             }
             else if (value == COURSE_CLASSIFY.COMPLETED.ToString())
             {
