@@ -1,13 +1,16 @@
+using Amazon.S3.Model;
 using its.gamify.api.Features.CourseParticipations;
 using its.gamify.api.Features.CourseParticipations.Commands;
 using its.gamify.api.Features.Courses.Commands;
 using its.gamify.api.Features.CourseSections.Queries;
 using its.gamify.core.Features.CourseCollections.Commands;
+using its.gamify.core.Features.CourseReviews;
 using its.gamify.core.Features.Courses.Commands;
 using its.gamify.core.Features.Courses.Queries;
 using its.gamify.core.Features.LearningMaterials.Queries;
 using its.gamify.core.Models;
 using its.gamify.core.Models.Courses;
+using its.gamify.core.Models.ShareModels;
 using its.gamify.domains.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -157,5 +160,17 @@ namespace its.gamify.api.Controllers
             }));
 
         }
+
+        [HttpGet("{id}/course-reviews")]
+        [Authorize]
+        public async Task<IActionResult> GetCourseReviews([FromRoute] Guid id, [FromQuery] FilterQuery filterQuery)
+        {
+            return Ok(await mediator.Send(new GetCourseReviewQuery()
+            {
+                CourseId = id,
+                Filter = filterQuery
+            }));
+        }
+
     }
 }

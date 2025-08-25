@@ -37,8 +37,10 @@ namespace its.gamify.api.Features.CourseParticipations
                     includes: [
                         x => x.Course,
                         x => x.User,
-                        x => x.LearningProgresses.Where(x=>!x.IsDeleted)
-                    ]
+                        x => x.CourseResult!,
+                        x=>x.CourseReview!,
+                        x => x.LearningProgresses.Where(x=>!x.IsDeleted),
+                        ]
                 );
                 return new BasePagingResponseModel<CourseParticipation>(Entities, Pagination);
             }

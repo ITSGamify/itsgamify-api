@@ -5,7 +5,6 @@ public class CourseResult : BaseEntity
     public double Scrore { get; set; } = 0.0;
     public bool IsPassed { get; set; } = false;
     public DateTime CompletedDate { get; set; } = DateTime.UtcNow;
-
     public string CourseNumber { get; set; } = string.Empty;
 
     #region Relationship Configuration 

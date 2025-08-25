@@ -1,4 +1,5 @@
 using AutoMapper;
+using its.gamify.core.Features.CourseReviews.Commands;
 using its.gamify.core.Models.Categories;
 using its.gamify.core.Models.Challenges;
 using its.gamify.core.Models.CourseCollections;
@@ -83,6 +84,10 @@ public class MapperConfigurationProfile : Profile
         CreateMap<LearningProgress, LearningProgessUpsertModel>()
             .ForMember(x => x.Type, op => op.Ignore())
             .ReverseMap();
+        #endregion
+
+        #region Review
+        CreateMap<CourseReview, CourseReviewCreateModel>().ReverseMap();
         #endregion
 
 

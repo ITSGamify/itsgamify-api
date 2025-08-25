@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Hangfire;
 using its.gamify.core;
+using its.gamify.core.Features.Notifications.Commands;
 using its.gamify.core.GlobalExceptionHandling.Exceptions;
 using its.gamify.core.Models.QuizAnswers;
 using its.gamify.core.Models.QuizResults;
@@ -34,7 +35,7 @@ namespace its.gamify.api.Features.QuizResults.Commands
                 RuleFor(x => x.Answer).Null();
             }
         }
-        class CommandHandler(IUnitOfWork _unitOfWork, IBackgroundJobClient _backgroundJobClient) : IRequestHandler<CreateQuizResultCommand, QuizResult>
+        class CommandHandler(IUnitOfWork _unitOfWork, IBackgroundJobClient _backgroundJobClient, IMediator mediator) : IRequestHandler<CreateQuizResultCommand, QuizResult>
         {
             public async Task<QuizResult> Handle(CreateQuizResultCommand request, CancellationToken cancellationToken)
             {
@@ -118,6 +119,25 @@ namespace its.gamify.api.Features.QuizResults.Commands
 
                     await _unitOfWork.CourseResultRepository.AddAsync(course_result);
                     await _unitOfWork.SaveChangesAsync();
+                    await mediator.Send(new CreateNotificationCommand()
+                    {
+                        Model = new NotificationCreateModel
+                        {
+                            UserId = participation.UserId,
+                            Type = NotificationType.COURSE_COMPLETED,
+
+                        }
+                    });
+
+                    await mediator.Send(new CreateNotificationCommand()
+                    {
+                        Model = new NotificationCreateModel
+                        {
+                            UserId = participation.UserId,
+                            Type = NotificationType.POINTS_BONUS,
+
+                        }
+                    });
                 }
             }
             private static QuizResult TrackQuizResult(Quiz quiz, IEnumerable<QuizAnswerCreateModel> userAnswers)

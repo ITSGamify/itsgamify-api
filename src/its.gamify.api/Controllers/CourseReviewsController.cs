@@ -1,35 +1,30 @@
-// using its.gamify.core.Features.CourseReviews.Queries;
-// using MediatR;
-// using Microsoft.AspNetCore.Mvc;
+using its.gamify.core.Features.CourseReviews.Commands;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
-// namespace its.gamify.api.Controllers
-// {
-//     [ApiController]
-//     [Route("api/course-reviews")]
-//     public class CourseReviewsController : ControllerBase
-//     {
-//         private readonly IMediator _mediator;
-//         public CourseReviewsController(IMediator mediator)
-//         {
-//             _mediator = mediator;
-//         }
+namespace its.gamify.api.Controllers
+{
+    [ApiController]
+    [Route("api/course-reviews")]
+    public class CourseReviewsController(IMediator mediator) : ControllerBase
+    {
+        private readonly IMediator _mediator = mediator;
 
-//         [HttpGet]
-//         public async Task<IActionResult> GetAll([FromQuery] GetCourseReviewQuery query)
-//         {
-//             var result = await _mediator.Send(query);
-//             if (result == null || result.Datas == null || !result.Datas.Any())
-//                 throw new InvalidOperationException("Danh sách CourseReview trống");
-//             return Ok(result);
-//         }
+        [HttpPost]
+        public async Task<IActionResult> CreateCourseReview([FromBody] CreateReviewCommand command)
+        {
 
-//         [HttpGet("{id}")]
-//         public async Task<IActionResult> GetById(Guid id)
-//         {
-//             var result = await _mediator.Send(new GetCourseReviewByIdQuery { Id = id });
-//             if (result == null)
-//                 throw new InvalidOperationException($"Không tìm thấy CourseReview với id: {id}");
-//             return Ok(result);
-//         }
-//     }
-// }
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCourseReview([FromRoute] Guid id)
+        {
+
+            await _mediator.Send(new DeleteReviewComamnd { Id = id });
+            return NoContent();
+        }
+
+    }
+}

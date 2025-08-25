@@ -101,6 +101,7 @@ public class GetAllCourseQuery : IRequest<BasePagingResponseModel<Course>>
                 filter = filter != null ? FilterCustom.CombineFilters(filter, filter_classify) : filter_classify;
 
             }
+
             bool isManageRole = _claimSerivce.CurrentRole == ROLE.ADMIN || _claimSerivce.CurrentRole == ROLE.TRAININGSTAFF ||
                                        _claimSerivce.CurrentRole == ROLE.MANAGER;
 
@@ -129,6 +130,7 @@ public class GetAllCourseQuery : IRequest<BasePagingResponseModel<Course>>
 
             return new BasePagingResponseModel<Course>(datas: res.Value.Entities, pagination: res.Value.Pagination);
         }
+
         private async Task<Expression<Func<Course, bool>>> ClassifyFunc(string? value, Guid UserId)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -136,19 +138,23 @@ public class GetAllCourseQuery : IRequest<BasePagingResponseModel<Course>>
                 return x => true;
             }
 
-            if (value == COURSE_CLASSIFY.ENROLLED.ToString())
+            if (value == COURSE_CLASSIFY.ENROLLED)
             {
-                return x => x.CourseParticipations.Any(u => u.Status == CourseParticipationStatusEnum.ENROLLED.ToString());
+                var courseIds = (await unitOfWork.CourseParticipationRepository
+                    .WhereAsync(x => x.UserId == UserId && x.Status == COURSE_CLASSIFY.ENROLLED)).Select(x => x.CourseId).ToList();
+                return x => courseIds.Contains(x.Id);
             }
             else if (value == COURSE_CLASSIFY.SAVED.ToString())
             {
                 if (UserId == Guid.Empty) return x => true;
-                List<Guid> collections = (await unitOfWork.CourseCollectionRepository.GetAllAsync()).Where(x => x.UserId == UserId).Select(x => x.CourseId).ToList();
-                return x => collections != null && collections.Count != 0 && collections.Contains(x.Id);
+                List<Guid> courseIds = [.. (await unitOfWork.CourseCollectionRepository.WhereAsync(x => x.UserId == UserId)).Select(x => x.CourseId)];
+                return x => courseIds.Contains(x.Id);
             }
             else if (value == COURSE_CLASSIFY.COMPLETED.ToString())
             {
-                return x => x.CourseParticipations.Any(u => u.Status == CourseParticipationStatusEnum.COMPLETED.ToString());
+                var courseIds = (await unitOfWork.CourseParticipationRepository
+                   .WhereAsync(x => x.UserId == UserId && x.Status == COURSE_CLASSIFY.COMPLETED)).Select(x => x.CourseId).ToList();
+                return x => courseIds.Contains(x.Id);
             }
             return x => true;
         }
