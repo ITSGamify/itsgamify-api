@@ -26,8 +26,8 @@ namespace its.gamify.core.Features.Challenges.Commands
             public async Task<bool> Handle(UpdateChallengeCommand request, CancellationToken cancellationToken)
             {
                 var challenge = await unitOfWork.ChallengeRepository.GetByIdAsync(request.Id) ?? throw new BadRequestException("Không tìm thấy thử thách!");
-                bool checkDupName = (await unitOfWork.ChallengeRepository.WhereAsync(x => x.Title.ToLower().Trim() == request.Model.Title.ToLower().Trim())) != null;
-                if (checkDupName) throw new Exception("Trùng tên!");
+                bool checkDupName = (await unitOfWork.ChallengeRepository.WhereAsync(x => x.Title.ToLower().Trim() == request.Model.Title.ToLower().Trim() && x.Id != request.Id)) != null;
+                if (checkDupName) throw new BadRequestException("Tên thử thách đã tồn tại!");
                 var mapper = unitOfWork.Mapper.Map(request.Model, new Challenge());
                 if (challenge == mapper) return true;
                 unitOfWork.Mapper.Map(request.Model, challenge);

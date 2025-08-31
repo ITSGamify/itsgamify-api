@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using its.gamify.core;
+using its.gamify.core.GlobalExceptionHandling.Exceptions;
 using its.gamify.core.Models.Courses;
 using its.gamify.core.Models.CourseSections;
 using its.gamify.core.Models.Lessons;
@@ -86,8 +87,8 @@ namespace its.gamify.api.Features.Courses.Commands
                     ?? throw new InvalidOperationException("Không tìm thấy image thumbnail")).Url;
                 course.IntroVideo = (await unitOfWork.FileRepository.FirstOrDefaultAsync(x => x.Id == request.Model.IntroVideoId)
                     ?? throw new InvalidOperationException("Không tìm thấy Intro Video với Id ")).Url;
-                bool checkDupName = (await unitOfWork.CourseRepository.WhereAsync(x => x.Title.ToLower().Trim() == request.Model.Title.ToLower().Trim())) != null;
-                if (checkDupName) throw new Exception("Trùng tên!");
+                bool checkDupName = (await unitOfWork.CourseRepository.WhereAsync(x => x.Title.ToLower().Trim() == request.Model.Title.ToLower().Trim() && x.Id != request.Model.Id)) != null;
+                if (checkDupName) throw new BadRequestException("Tên khóa học đã tồn tại!");
                 if (request.Model.IsUpdateDepartment)
                 {
                     await UpdateCourseDepartments(request.Model, cancellationToken);
