@@ -68,8 +68,8 @@ namespace its.gamify.core.Features.Challenges
                                     searchFields: ["Title", "Description"],
                                     sortOrders: sortOrders,
                                     includeFunc: x =>
-                                        x.Include(x => x.Course)
-                                        .ThenInclude(x => x.CourseResults.Where(x => x.UserId == claimsService.CurrentUser))
+                                        x.Include(x => x.Course).ThenInclude(x => x.CourseResults.Where(x => x.UserId == claimsService.CurrentUser))
+                                        .Include(x => x.Rooms.Where(x => !x.IsDeleted))
                                         .Include(x => x.Category!),
                                     withDeleted: checkRole
                                 );
