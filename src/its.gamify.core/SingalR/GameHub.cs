@@ -32,9 +32,15 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
 
         // Kiểm tra user đã out room chưa
         var existingRoomUser = await _unitOfWork.RoomUserRepository
-            .FirstOrDefaultAsync(ru => ru.RoomId == room.Id && ru.UserId == userId && !ru.IsOutRoom);
+            .FirstOrDefaultAsync(ru => ru.RoomId == room.Id && ru.UserId == userId);
 
         if (existingRoomUser == null)
+        {
+            await Clients.Caller.SendAsync("Error", "Bạn không có quyền truy cập phòng này.");
+            return;
+        }
+
+        if (room.Status == ROOM_STATUS.PLAYING && existingRoomUser.IsOutRoom == true)
         {
             await Clients.Caller.SendAsync("Error", "Bạn không có quyền truy cập phòng này.");
             return;
@@ -231,10 +237,12 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
 
         // Lưu lịch sử game
         var roomUsers = await _unitOfWork.RoomUserRepository
-            .WhereAsync(ru => ru.RoomId == roomId && !ru.IsOutRoom,
-                        includes: [ru => ru.User]);
+            .WhereAsync(ru => ru.RoomId == roomId, includes: [ru => ru.User]);
 
-        var winner = roomUsers.OrderByDescending(ru => ru.CurrentScore).First();
+        var winner = roomUsers
+            .OrderBy(ru => ru.IsOutRoom)
+            .ThenByDescending(ru => ru.CurrentScore)
+            .First();
 
         var rankedUsers = roomUsers
             .OrderByDescending(ru => ru.CurrentScore)
@@ -290,7 +298,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         await _unitOfWork.SaveChangesAsync();
 
         // Gửi kết quả
-        var results = roomUsers.OrderByDescending(r => r.CurrentScore);
+        var results = roomUsers.OrderByDescending(ru => ru.CurrentScore).ThenByDescending(ru => ru.CorrectAnswers);
 
         var jsonResult = JsonHelper.SerializeObject(results);
 
@@ -370,6 +378,25 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         await Clients.Group($"room_{roomId}").SendAsync("RoomUpdated", jsonRoom);
     }
 
+    public async Task HandleMatchOut(Guid roomId, Guid userId)
+    {
+        var roomUser = await _unitOfWork.RoomUserRepository
+                   .FirstOrDefaultAsync(ru => ru.RoomId == roomId && ru.UserId == userId) ?? throw new BadRequestException("Người chơi không tồn tại!");
+
+        roomUser.IsOutRoom = true;
+        _unitOfWork.RoomUserRepository.Update(roomUser);
+        await _unitOfWork.SaveChangesAsync();
+
+        var other_user = await _unitOfWork.RoomUserRepository
+                   .WhereAsync(ru => ru.RoomId == roomId && ru.IsOutRoom == false);
+        if (other_user.Count >= 1) return;
+
+        var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId) ?? throw new BadRequestException("Không tìm thấy thi đấu!");
+
+        _unitOfWork.RoomRepository.SoftRemove(room);
+        _roomQuestions.Remove(roomId.ToString());
+        await _unitOfWork.SaveChangesAsync();
+    }
     private async Task UpdateUserMetric(Guid userId, bool isWinner, int points, int totalPlayers = 0)
     {
         var quarter = await _unitOfWork.QuarterRepository
