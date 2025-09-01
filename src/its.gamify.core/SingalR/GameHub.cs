@@ -40,9 +40,9 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
             return;
         }
 
-        if (room.Status == ROOM_STATUS.PLAYING && existingRoomUser.IsOutRoom == true)
+        if (room.Status == ROOM_STATUS.PLAYING)
         {
-            await Clients.Caller.SendAsync("Error", "Bạn không có quyền truy cập phòng này.");
+            await Clients.Caller.SendAsync("InValidJoin", "InValidJoin");
             return;
         }
 
@@ -396,6 +396,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
     {
         var roomUser = await _unitOfWork.RoomUserRepository
                    .FirstOrDefaultAsync(ru => ru.RoomId == roomId && ru.UserId == userId) ?? throw new BadRequestException("Người chơi không tồn tại!");
+        var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId) ?? throw new BadRequestException("Không tìm thấy thi đấu!");
 
         roomUser.IsOutRoom = true;
         _unitOfWork.RoomUserRepository.Update(roomUser);
@@ -403,9 +404,11 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
 
         var other_user = await _unitOfWork.RoomUserRepository
                    .WhereAsync(ru => ru.RoomId == roomId && ru.IsOutRoom == false);
-        if (other_user.Count >= 1) return;
-
-        var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId) ?? throw new BadRequestException("Không tìm thấy thi đấu!");
+        if (other_user.Count >= 1)
+        {
+            if (room.Status == ROOM_STATUS.PLAYING) await CheckAllPlayersAnswered(roomId, roomUser, false);
+            return;
+        }
 
         _unitOfWork.RoomRepository.SoftRemove(room);
         _roomQuestions.Remove(roomId.ToString());
