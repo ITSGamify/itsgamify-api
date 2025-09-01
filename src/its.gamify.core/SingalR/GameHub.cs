@@ -130,7 +130,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         string jsonRoom = await GetRoomJsonAsync(roomId);
         await Clients.Group($"room_{roomId}").SendAsync("RoomUpdated", jsonRoom);
     }
-    public async Task SubmitAnswer(Guid roomId, Guid userId, int currentQuestion, int points)
+    public async Task SubmitAnswer(Guid roomId, Guid userId, bool isTimeEnd, int points)
     {
         var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId);
         if (room == null || room.Status != ROOM_STATUS.PLAYING)
@@ -162,13 +162,13 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         roomUser.IsCurrentQuestionAnswered = true;
 
         roomUser.CurrentScore += points; // Điểm cố định hoặc tính theo thời gian
-        roomUser.CorrectAnswers++;
+        if (points > 0) roomUser.CorrectAnswers++;
 
         // Kiểm tra tất cả đã trả lời chưa
-        await CheckAllPlayersAnswered(roomId, roomUser);
+        await CheckAllPlayersAnswered(roomId, roomUser, isTimeEnd);
     }
 
-    private async Task CheckAllPlayersAnswered(Guid roomId, RoomUser roomUser)
+    private async Task CheckAllPlayersAnswered(Guid roomId, RoomUser roomUser, bool isTimeEnd)
     {
         // Lấy tất cả players đang active trong room
         var activePlayers = await _unitOfWork.RoomUserRepository
@@ -181,6 +181,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
                 ru.CurrentScore = roomUser.CurrentScore;
                 ru.CorrectAnswers = roomUser.CorrectAnswers;
             }
+            if (isTimeEnd) ru.IsCurrentQuestionAnswered = true;
         }
 
         // Kiểm tra tất cả đã trả lời chưa
@@ -188,7 +189,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
 
         if (allAnswered && activePlayers.Count != 0)
         {
-            await MoveToNextQuestion(roomId, activePlayers);
+            await MoveToNextQuestion(roomId, activePlayers, roomUser);
         }
         else
         {
@@ -197,7 +198,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         }
     }
 
-    public async Task MoveToNextQuestion(Guid roomId, List<RoomUser> activePlayers)
+    public async Task MoveToNextQuestion(Guid roomId, List<RoomUser> activePlayers, RoomUser roomUser)
     {
         var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId);
         if (room == null) return;
@@ -210,6 +211,8 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
 
         if (isLastQuestion)
         {
+            _unitOfWork.RoomUserRepository.Update(roomUser);
+            await _unitOfWork.SaveChangesAsync();
             await EndMatch(roomId);
             return;
         }
@@ -239,38 +242,62 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         var roomUsers = await _unitOfWork.RoomUserRepository
             .WhereAsync(ru => ru.RoomId == roomId, includes: [ru => ru.User]);
 
-        var winner = roomUsers
-            .OrderBy(ru => ru.IsOutRoom)
-            .ThenByDescending(ru => ru.CurrentScore)
-            .First();
+        // Tìm người chiến thắng: ưu tiên người chưa out khỏi phòng
+        var activeUsers = roomUsers.Where(ru => !ru.IsOutRoom).ToList();
 
+        // Lấy danh sách người chơi có thể thắng (chưa out hoặc tất cả đều đã out)
+        var potentialWinners = activeUsers.Any() ? activeUsers : roomUsers;
+
+        // Xác định điểm số cao nhất
+        var maxScore = potentialWinners.Max(ru => ru.CurrentScore);
+
+        // Lấy danh sách tất cả người chơi có điểm cao nhất
+        var topScorers = potentialWinners
+            .Where(ru => ru.CurrentScore == maxScore)
+            .OrderByDescending(ru => ru.CorrectAnswers)
+            .ToList();
+
+        // Nếu chỉ có 1 người điểm cao nhất, người đó là winner
+        // Nếu có nhiều người cùng điểm cao nhất, tất cả đều là winner
+        var winners = topScorers;
+
+        // Xếp hạng người chơi
         var rankedUsers = roomUsers
-            .OrderByDescending(ru => ru.CurrentScore)
+            .OrderBy(ru => ru.IsOutRoom) // false trước, true sau
+            .ThenByDescending(ru => ru.CurrentScore)
             .ThenByDescending(ru => ru.CorrectAnswers)
             .Select((ru, index) => new { User = ru, Rank = index + 1 })
             .ToList();
+
+        // Tính tổng điểm của người thua
+        int totalLoserPoints = room.BetPoints * (rankedUsers.Count - winners.Count);
+        // Điểm mỗi người thắng nhận được
+        int pointsPerWinner = rankedUsers.Count != winners.Count && winners.Count > 0 ? totalLoserPoints / winners.Count : 0;
 
         foreach (var rankedUser in rankedUsers)
         {
             var roomUser = rankedUser.User;
 
-            bool isWinner = roomUser.UserId == winner.UserId;
+            bool isWinner = winners.Any(w => w.UserId == roomUser.UserId);
             int pointsToAdd;
+
             if (isWinner)
             {
-                pointsToAdd = room.BetPoints * (rankedUsers.Count - 1);
+                // Nếu có nhiều người thắng, chia đều điểm
+                pointsToAdd = pointsPerWinner;
             }
             else
             {
                 pointsToAdd = -room.BetPoints;
             }
+
             await _unitOfWork.UserChallengeHistoryRepository.AddAsync(new UserChallengeHistory
             {
                 UserId = roomUser.UserId,
-                WinnerId = winner.UserId,
+                WinnerId = winners.First().UserId, // Lấy ID của một trong những người thắng
                 ChallengeId = room.ChallengeId,
                 YourScore = roomUser.CurrentScore,
-                WinnerScore = winner.CurrentScore,
+                WinnerScore = maxScore,
                 Points = pointsToAdd,
                 Rank = rankedUser.Rank,
                 AverageCorrect = roomUser.CorrectAnswers / (double)_roomQuestions[roomId.ToString()].Count,
@@ -278,27 +305,17 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
                     UserChallengeHistoryEnum.WIN : UserChallengeHistoryEnum.LOSE
             });
 
-            await UpdateUserMetric(roomUser.UserId, roomUser.UserId == winner.UserId, room.BetPoints, rankedUsers.Count);
-
-            await mediator.Send(new CreateBadgeCommand()
-            {
-                Model = new CreateBadgeModel { Type = BadgeType.COMBO_MASTER, UserId = roomUser.UserId }
-            });
-            await mediator.Send(new CreateBadgeCommand()
-            {
-                Model = new CreateBadgeModel { Type = BadgeType.INVINCIBLE, UserId = roomUser.UserId }
-            });
-            await mediator.Send(new CreateBadgeCommand()
-            {
-                Model = new CreateBadgeModel { Type = BadgeType.FIRST_VICTORY, UserId = roomUser.UserId }
-            });
+            await UpdateUserMetric(roomUser.UserId, isWinner, room.BetPoints, rankedUsers.Count);
 
         }
 
         await _unitOfWork.SaveChangesAsync();
 
         // Gửi kết quả
-        var results = roomUsers.OrderByDescending(ru => ru.CurrentScore).ThenByDescending(ru => ru.CorrectAnswers);
+        var results = roomUsers
+            .OrderBy(ru => ru.IsOutRoom)
+            .ThenByDescending(ru => ru.CurrentScore)
+            .ThenByDescending(ru => ru.CorrectAnswers);
 
         var jsonResult = JsonHelper.SerializeObject(results);
 
@@ -308,7 +325,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
 
         await Clients.Group($"room_{roomId}").SendAsync("RoomUpdated", jsonRoom);
 
-
+        // Đoạn code này đã được thực hiện ở trên, nhưng giữ nguyên theo mã gốc
         foreach (var rankedUser in rankedUsers)
         {
             var roomUser = rankedUser.User;
@@ -324,11 +341,8 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
             {
                 Model = new CreateBadgeModel { Type = BadgeType.FIRST_VICTORY, UserId = roomUser.UserId }
             });
-
         }
-
     }
-
     public async Task OutRoom(Guid roomId, Guid userId)
     {
         bool IsDeleted = false;
