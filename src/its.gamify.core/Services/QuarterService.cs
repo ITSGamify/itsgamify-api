@@ -97,8 +97,8 @@ public class QuarterService(IUnitOfWork _unitOfWork, ICurrentTime _currentTime, 
 
         // Tính toán ngày bắt đầu và kết thúc của quý hiện tại
         var startMonth = (quarterNumber - 1) * 3 + 1;
-        var startDate = new DateTime(currentYear, startMonth, 1);
-        var endDate = startDate.AddMonths(3).AddDays(-1);
+        var startDate = new DateTime(currentYear, startMonth, 1).AddDays(2);
+        var endDate = startDate.AddMonths(3).AddDays(-3);
 
         var quarterName = $"Qúy {quarterNumber}";
 

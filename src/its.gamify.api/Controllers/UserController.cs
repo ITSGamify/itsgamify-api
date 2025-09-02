@@ -70,6 +70,17 @@ namespace its.gamify.api.Controllers
 
         }
 
+        [HttpDelete("delete-range")]
+        public async Task<IActionResult> DeleteRange(List<Guid> ids)
+        {
+            await mediator.Send(new DeleteUserRangeCommand()
+            {
+                Ids = ids
+            });
+            return NoContent();
+        }
+
+
         [HttpGet("{id}/statistic")]
         public async Task<IActionResult> GetStatistic([FromRoute] Guid id, [FromQuery] Guid Quaterid)
         {
