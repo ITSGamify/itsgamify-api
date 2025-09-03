@@ -50,7 +50,7 @@ public class QuarterService(IUnitOfWork _unitOfWork, ICurrentTime _currentTime, 
         // Xác định tên và năm cho quý kế tiếp
         var nextYear = nextQuarterStartDate.Value.Year;
         var quarterNumber = DateTimeUtilities.GetQuarterNumber(nextQuarterStartDate.Value.Month);
-        var quarterName = $"Qúy {quarterNumber}";
+        var quarterName = $"Quý {quarterNumber}";
 
         // Tạo quarter mới
         var newQuarter = new Quarter
@@ -100,7 +100,7 @@ public class QuarterService(IUnitOfWork _unitOfWork, ICurrentTime _currentTime, 
         var startDate = new DateTime(currentYear, startMonth, 1).AddDays(2);
         var endDate = startDate.AddMonths(3).AddDays(-3);
 
-        var quarterName = $"Qúy {quarterNumber}";
+        var quarterName = $"Quý {quarterNumber}";
 
         // Kiểm tra xem quarter hiện tại đã tồn tại chưa (theo StartDate)
         var existingQuarter = await _unitOfWork.QuarterRepository
