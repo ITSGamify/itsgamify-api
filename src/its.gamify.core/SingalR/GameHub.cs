@@ -7,6 +7,7 @@ using its.gamify.core.GlobalExceptionHandling.Exceptions;
 using MediatR;
 using its.gamify.core.Features.Badges.Commands;
 using its.gamify.core.Utilities;
+using System.Collections.Concurrent;
 
 namespace its.gamify.core.SingalR;
 
@@ -15,6 +16,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
     private static readonly Dictionary<string, HashSet<string>> _roomConnections = [];
     private static readonly Dictionary<string, string> _connectionToUser = [];
     private static readonly Dictionary<string, List<Question>> _roomQuestions = [];
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _roomLocks = new ConcurrentDictionary<string, SemaphoreSlim>();
 
 
     public async Task JoinRoom(Guid roomId, Guid userId)
@@ -230,117 +232,131 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         await Clients.Group($"room_{roomId}").SendAsync("RoomUpdated", jsonRoom);
     }
 
-    private async Task EndMatch(Guid roomId)
+     private async Task EndMatch(Guid roomId)
     {
-        var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId);
-        if (room == null || room.Status == ROOM_STATUS.FINISHED) return;
+        // Tạo hoặc lấy khóa cho phòng cụ thể
+        var lockObj = _roomLocks.GetOrAdd(roomId.ToString(), _ => new SemaphoreSlim(1, 1));
 
-        room.Status = ROOM_STATUS.FINISHED;
-        _unitOfWork.RoomRepository.Update(room);
-
-        // Lưu lịch sử game
-        var roomUsers = await _unitOfWork.RoomUserRepository
-            .WhereAsync(ru => ru.RoomId == roomId, includes: [ru => ru.User]);
-
-        // Tìm người chiến thắng: ưu tiên người chưa out khỏi phòng
-        var activeUsers = roomUsers.Where(ru => !ru.IsOutRoom).ToList();
-
-        // Lấy danh sách người chơi có thể thắng (chưa out hoặc tất cả đều đã out)
-        var potentialWinners = activeUsers.Any() ? activeUsers : roomUsers;
-
-        // Xác định điểm số cao nhất
-        var maxScore = potentialWinners.Max(ru => ru.CurrentScore);
-
-        // Lấy danh sách tất cả người chơi có điểm cao nhất
-        var topScorers = potentialWinners
-            .Where(ru => ru.CurrentScore == maxScore)
-            .OrderByDescending(ru => ru.CorrectAnswers)
-            .ToList();
-
-        // Nếu chỉ có 1 người điểm cao nhất, người đó là winner
-        // Nếu có nhiều người cùng điểm cao nhất, tất cả đều là winner
-        var winners = topScorers;
-
-        // Xếp hạng người chơi
-        var rankedUsers = roomUsers
-            .OrderBy(ru => ru.IsOutRoom) // false trước, true sau
-            .ThenByDescending(ru => ru.CurrentScore)
-            .ThenByDescending(ru => ru.CorrectAnswers)
-            .Select((ru, index) => new { User = ru, Rank = index + 1 })
-            .ToList();
-
-        // Tính tổng điểm của người thua
-        int totalLoserPoints = room.BetPoints * (rankedUsers.Count - winners.Count);
-        // Điểm mỗi người thắng nhận được
-        int pointsPerWinner = rankedUsers.Count != winners.Count && winners.Count > 0 ? totalLoserPoints / winners.Count : 0;
-
-        foreach (var rankedUser in rankedUsers)
+        try
         {
-            var roomUser = rankedUser.User;
+            // Đợi để lấy khóa
+            await lockObj.WaitAsync();
 
-            bool isWinner = winners.Any(w => w.UserId == roomUser.UserId);
-            int pointsToAdd;
+            // Kiểm tra lại trạng thái phòng sau khi lấy được khóa
+            var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId);
+            if (room == null || room.Status == ROOM_STATUS.FINISHED) return;
 
-            if (isWinner)
+            room.Status = ROOM_STATUS.FINISHED;
+            _unitOfWork.RoomRepository.Update(room);
+
+            // Lưu lịch sử game
+            var roomUsers = await _unitOfWork.RoomUserRepository
+                .WhereAsync(ru => ru.RoomId == roomId, includes: [ru => ru.User]);
+
+            // Tìm người chiến thắng: ưu tiên người chưa out khỏi phòng
+            var activeUsers = roomUsers.Where(ru => !ru.IsOutRoom).ToList();
+
+            // Lấy danh sách người chơi có thể thắng (chưa out hoặc tất cả đều đã out)
+            var potentialWinners = activeUsers.Any() ? activeUsers : roomUsers;
+
+            // Xác định điểm số cao nhất
+            var maxScore = potentialWinners.Max(ru => ru.CurrentScore);
+
+            // Lấy danh sách tất cả người chơi có điểm cao nhất
+            var topScorers = potentialWinners
+                .Where(ru => ru.CurrentScore == maxScore)
+                .OrderByDescending(ru => ru.CorrectAnswers)
+                .ToList();
+
+            // Nếu chỉ có 1 người điểm cao nhất, người đó là winner
+            // Nếu có nhiều người cùng điểm cao nhất, tất cả đều là winner
+            var winners = topScorers;
+
+            // Xếp hạng người chơi
+            var rankedUsers = roomUsers
+                .OrderBy(ru => ru.IsOutRoom) // false trước, true sau
+                .ThenByDescending(ru => ru.CurrentScore)
+                .ThenByDescending(ru => ru.CorrectAnswers)
+                .Select((ru, index) => new { User = ru, Rank = index + 1 })
+                .ToList();
+
+            // Tính tổng điểm của người thua
+            int totalLoserPoints = room.BetPoints * (rankedUsers.Count - winners.Count);
+            // Điểm mỗi người thắng nhận được
+            int pointsPerWinner = rankedUsers.Count != winners.Count && winners.Count > 0 ? totalLoserPoints / winners.Count : 0;
+
+            foreach (var rankedUser in rankedUsers)
             {
-                // Nếu có nhiều người thắng, chia đều điểm
-                pointsToAdd = pointsPerWinner;
+                var roomUser = rankedUser.User;
+
+                bool isWinner = winners.Any(w => w.UserId == roomUser.UserId);
+                int pointsToAdd;
+
+                if (isWinner)
+                {
+                    // Nếu có nhiều người thắng, chia đều điểm
+                    pointsToAdd = pointsPerWinner;
+                }
+                else
+                {
+                    pointsToAdd = -room.BetPoints;
+                }
+
+                await _unitOfWork.UserChallengeHistoryRepository.AddAsync(new UserChallengeHistory
+                {
+                    UserId = roomUser.UserId,
+                    WinnerId = isWinner ? roomUser.UserId : winners.First().UserId, // Lấy ID của một trong những người thắng
+                    ChallengeId = room.ChallengeId,
+                    YourScore = roomUser.CurrentScore,
+                    WinnerScore = maxScore,
+                    Points = pointsToAdd,
+                    Rank = isWinner? 1 : rankedUser.Rank,
+                    AverageCorrect = roomUser.CorrectAnswers / (double)_roomQuestions[roomId.ToString()].Count,
+                    Status = isWinner ?
+                        UserChallengeHistoryEnum.WIN : UserChallengeHistoryEnum.LOSE
+                });
+
+                await UpdateUserMetric(roomUser.UserId, isWinner, room.BetPoints, rankedUsers.Count);
             }
-            else
+
+            await _unitOfWork.SaveChangesAsync();
+
+            // Gửi kết quả
+            var results = roomUsers
+                .OrderBy(ru => ru.IsOutRoom)
+                .ThenByDescending(ru => ru.CurrentScore)
+                .ThenByDescending(ru => ru.CorrectAnswers);
+
+            var jsonResult = JsonHelper.SerializeObject(results);
+
+            await Clients.Group($"room_{roomId}").SendAsync("GameEnded", jsonResult);
+
+            string jsonRoom = await GetRoomJsonAsync(roomId);
+
+            await Clients.Group($"room_{roomId}").SendAsync("RoomUpdated", jsonRoom);
+
+            // Đoạn code này đã được thực hiện ở trên, nhưng giữ nguyên theo mã gốc
+            foreach (var rankedUser in rankedUsers)
             {
-                pointsToAdd = -room.BetPoints;
+                var roomUser = rankedUser.User;
+                await mediator.Send(new CreateBadgeCommand()
+                {
+                    Model = new CreateBadgeModel { Type = BadgeType.COMBO_MASTER, UserId = roomUser.UserId }
+                });
+                await mediator.Send(new CreateBadgeCommand()
+                {
+                    Model = new CreateBadgeModel { Type = BadgeType.INVINCIBLE, UserId = roomUser.UserId }
+                });
+                await mediator.Send(new CreateBadgeCommand()
+                {
+                    Model = new CreateBadgeModel { Type = BadgeType.FIRST_VICTORY, UserId = roomUser.UserId }
+                });
             }
-
-            await _unitOfWork.UserChallengeHistoryRepository.AddAsync(new UserChallengeHistory
-            {
-                UserId = roomUser.UserId,
-                WinnerId = isWinner ? roomUser.UserId : winners.First().UserId, // Lấy ID của một trong những người thắng
-                ChallengeId = room.ChallengeId,
-                YourScore = roomUser.CurrentScore,
-                WinnerScore = maxScore,
-                Points = pointsToAdd,
-                Rank = isWinner? 1 : rankedUser.Rank,
-                AverageCorrect = roomUser.CorrectAnswers / (double)_roomQuestions[roomId.ToString()].Count,
-                Status = isWinner ?
-                    UserChallengeHistoryEnum.WIN : UserChallengeHistoryEnum.LOSE
-            });
-
-            await UpdateUserMetric(roomUser.UserId, isWinner, room.BetPoints, rankedUsers.Count);
-
         }
-
-        await _unitOfWork.SaveChangesAsync();
-
-        // Gửi kết quả
-        var results = roomUsers
-            .OrderBy(ru => ru.IsOutRoom)
-            .ThenByDescending(ru => ru.CurrentScore)
-            .ThenByDescending(ru => ru.CorrectAnswers);
-
-        var jsonResult = JsonHelper.SerializeObject(results);
-
-        await Clients.Group($"room_{roomId}").SendAsync("GameEnded", jsonResult);
-
-        string jsonRoom = await GetRoomJsonAsync(roomId);
-
-        await Clients.Group($"room_{roomId}").SendAsync("RoomUpdated", jsonRoom);
-
-        // Đoạn code này đã được thực hiện ở trên, nhưng giữ nguyên theo mã gốc
-        foreach (var rankedUser in rankedUsers)
+        finally
         {
-            var roomUser = rankedUser.User;
-            await mediator.Send(new CreateBadgeCommand()
-            {
-                Model = new CreateBadgeModel { Type = BadgeType.COMBO_MASTER, UserId = roomUser.UserId }
-            });
-            await mediator.Send(new CreateBadgeCommand()
-            {
-                Model = new CreateBadgeModel { Type = BadgeType.INVINCIBLE, UserId = roomUser.UserId }
-            });
-            await mediator.Send(new CreateBadgeCommand()
-            {
-                Model = new CreateBadgeModel { Type = BadgeType.FIRST_VICTORY, UserId = roomUser.UserId }
-            });
+            lockObj.Release();
+            _roomLocks.TryRemove(roomId.ToString(), out _);
         }
     }
     public async Task OutRoom(Guid roomId, Guid userId)
