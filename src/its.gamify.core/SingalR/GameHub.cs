@@ -233,7 +233,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
     private async Task EndMatch(Guid roomId)
     {
         var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId);
-        if (room == null) return;
+        if (room == null || room.Status == ROOM_STATUS.FINISHED) return;
 
         room.Status = ROOM_STATUS.FINISHED;
         _unitOfWork.RoomRepository.Update(room);
