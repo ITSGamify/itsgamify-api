@@ -299,7 +299,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
                 YourScore = roomUser.CurrentScore,
                 WinnerScore = maxScore,
                 Points = pointsToAdd,
-                Rank = rankedUser.Rank,
+                Rank = isWinner? 1 : rankedUser.Rank,
                 AverageCorrect = roomUser.CorrectAnswers / (double)_roomQuestions[roomId.ToString()].Count,
                 Status = isWinner ?
                     UserChallengeHistoryEnum.WIN : UserChallengeHistoryEnum.LOSE
