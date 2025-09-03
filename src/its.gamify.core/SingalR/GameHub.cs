@@ -294,7 +294,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
             await _unitOfWork.UserChallengeHistoryRepository.AddAsync(new UserChallengeHistory
             {
                 UserId = roomUser.UserId,
-                WinnerId = winners.First().UserId, // Lấy ID của một trong những người thắng
+                WinnerId = isWinner ? roomUser.UserId : winners.First().UserId, // Lấy ID của một trong những người thắng
                 ChallengeId = room.ChallengeId,
                 YourScore = roomUser.CurrentScore,
                 WinnerScore = maxScore,
