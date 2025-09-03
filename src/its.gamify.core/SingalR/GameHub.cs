@@ -135,7 +135,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         var room = await _unitOfWork.RoomRepository.GetByIdAsync(roomId);
         if (room == null || room.Status != ROOM_STATUS.PLAYING)
         {
-            await Clients.Caller.SendAsync("Error", "Game không hợp lệ.");
+            // await Clients.Caller.SendAsync("Error", "Game không hợp lệ.");
             return;
         }
 
