@@ -352,6 +352,7 @@ public class GameHub(IUnitOfWork _unitOfWork, ICurrentTime currentTime, IMediato
         if (roomUser != null)
         {
             roomUser.IsOutRoom = true;
+            roomUser.IsDeleted = true;
             _unitOfWork.RoomUserRepository.Update(roomUser);
 
             // Nếu là host thì chuyển host cho người khác
