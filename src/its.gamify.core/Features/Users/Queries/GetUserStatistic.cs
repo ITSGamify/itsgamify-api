@@ -50,25 +50,17 @@ namespace its.gamify.api.Features.Users.Queries
 
                 if (user.Role!.Name == ROLE.EMPLOYEE)
                 {
-                    filter = x => x.Status == COURSE_STATUS.PUBLISHED &&
-                        x.IsDraft == false &&
-                        (x.CourseType == COURSE_TYPE.ALL ||
-                            (x.CourseType == COURSE_TYPE.DEPARTMENTONLY
-                             && x.CourseDepartments.Any(x => x.DepartmentId == user.DepartmentId && !x.IsDeleted)
-                             && x.Status == COURSE_STATUS.PUBLISHED
-                             && x.IsDraft == false
-                             && x.QuarterId == request.QuarterId));
+                    filter = x => x.Status == COURSE_STATUS.PUBLISHED && x.IsDraft == false && x.QuarterId == quarter!.Id &&
+                    (x.CourseType == COURSE_TYPE.ALL ||
+                    (x.CourseType == COURSE_TYPE.DEPARTMENTONLY && x.CourseDepartments!.Any(cd => cd.DepartmentId == user.DepartmentId && cd.IsDeleted == false)));
 
                 }
 
                 else if (user.Role!.Name == ROLE.LEADER)
                 {
-                    filter = x => x.Status == COURSE_STATUS.PUBLISHED &&
-                                x.IsDraft == false && x.QuarterId == request.QuarterId
-                                || (x.CourseDepartments.Any(x => x.DepartmentId == user.DepartmentId && !x.IsDeleted)
-                                    && x.CourseType == CourseTypeEnum.DEPARTMENTONLY.ToString()
-                                    && x.Status == COURSE_STATUS.PUBLISHED &&
-                                    x.IsDraft == false);
+                    filter = x => x.Status == COURSE_STATUS.PUBLISHED && x.IsDraft == false && x.QuarterId == quarter.Id &&
+                             (x.CourseType == COURSE_TYPE.ALL || x.CourseType == COURSE_TYPE.LEADERONLY ||
+                             (x.CourseType == COURSE_TYPE.DEPARTMENTONLY && x.CourseDepartments!.Any(cd => cd.DepartmentId == user.DepartmentId && cd.IsDeleted == false)));
                 }
                 // Lấy khóa học của phòng ban của người dùng
                 var departmentCourses = await unitOfWork.CourseRepository.WhereAsync(filter!, includes: [x => x.Quarter]);
@@ -90,23 +82,7 @@ namespace its.gamify.api.Features.Users.Queries
 
                 // Tính tổng tiến độ
                 int totalProgress = 0;
-                // if (courseParticipations.Count != 0)
-                // {
-                //     totalProgress = (int)courseParticipations.Average(cp =>
-                //     {
-                //         if (cp.Status == CourseParticipationStatusEnum.COMPLETED.ToString())
-                //             return 100;
 
-                //         if (cp.LearningProgresses.Count != 0)
-                //         {
-                //             int completedCount = cp.LearningProgresses.Count(lp => lp.Status == PROGRESS_STATUS.COMPLETED);
-                //             int totalCount = cp.LearningProgresses.Count;
-                //             return totalCount > 0 ? (int)((completedCount * 100.0) / totalCount) : 0;
-                //         }
-
-                //         return 0;
-                //     });
-                // }
 
                 // Tạo danh sách khóa học với thông tin chi tiết
                 int completed = 0;
