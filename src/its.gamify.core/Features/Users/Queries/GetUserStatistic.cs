@@ -71,7 +71,7 @@ namespace its.gamify.api.Features.Users.Queries
                                     x.IsDraft == false);
                 }
                 // Lấy khóa học của phòng ban của người dùng
-                var departmentCourses = await unitOfWork.CourseRepository.WhereAsync(filter!);
+                var departmentCourses = await unitOfWork.CourseRepository.WhereAsync(filter!, includes: [x => x.Quarter]);
 
                 // Lấy thông tin tham gia khóa học của người dùng
                 var courseParticipations = await unitOfWork.CourseParticipationRepository
@@ -90,25 +90,27 @@ namespace its.gamify.api.Features.Users.Queries
 
                 // Tính tổng tiến độ
                 int totalProgress = 0;
-                if (courseParticipations.Count != 0)
-                {
-                    totalProgress = (int)courseParticipations.Average(cp =>
-                    {
-                        if (cp.Status == CourseParticipationStatusEnum.COMPLETED.ToString())
-                            return 100;
+                // if (courseParticipations.Count != 0)
+                // {
+                //     totalProgress = (int)courseParticipations.Average(cp =>
+                //     {
+                //         if (cp.Status == CourseParticipationStatusEnum.COMPLETED.ToString())
+                //             return 100;
 
-                        if (cp.LearningProgresses.Count != 0)
-                        {
-                            int completedCount = cp.LearningProgresses.Count(lp => lp.Status == PROGRESS_STATUS.COMPLETED);
-                            int totalCount = cp.LearningProgresses.Count;
-                            return totalCount > 0 ? (int)((completedCount * 100.0) / totalCount) : 0;
-                        }
+                //         if (cp.LearningProgresses.Count != 0)
+                //         {
+                //             int completedCount = cp.LearningProgresses.Count(lp => lp.Status == PROGRESS_STATUS.COMPLETED);
+                //             int totalCount = cp.LearningProgresses.Count;
+                //             return totalCount > 0 ? (int)((completedCount * 100.0) / totalCount) : 0;
+                //         }
 
-                        return 0;
-                    });
-                }
+                //         return 0;
+                //     });
+                // }
 
                 // Tạo danh sách khóa học với thông tin chi tiết
+                int completed = 0;
+                int in_completed = 0;
                 var courseDetails = new List<CourseStatisticViewModel>();
                 foreach (var cp in courseParticipations)
                 {
@@ -119,6 +121,7 @@ namespace its.gamify.api.Features.Users.Queries
                     {
                         status = "Hoàn thành";
                         progress = 100;
+                        completed += 1;
                     }
                     else if (cp.LearningProgresses.Count > 0)
                     {
@@ -133,6 +136,7 @@ namespace its.gamify.api.Features.Users.Queries
 
                         // Calculate progress based on completed lessons relative to total lessons
                         progress = totalLessons > 0 ? (int)((completedCount * 100.0) / totalLessons) : 0;
+                        in_completed += 1;
                     }
 
                     // Tính số ngày còn lại
@@ -161,8 +165,8 @@ namespace its.gamify.api.Features.Users.Queries
                 foreach (var course in departmentCourses.Where(c => !courseParticipations.Any(cp => cp.CourseId == c.Id)))
                 {
                     // Tính deadline mặc định (ví dụ: 30 ngày từ hiện tại)
-                    DateTime defaultDeadline = DateTime.Now.AddDays(30);
-                    int daysRemaining = 30;
+                    DateTime defaultDeadline = course.Quarter.EndDate!.Value;
+                    int daysRemaining = (defaultDeadline - DateTime.Now).Days;
 
                     courseDetails.Add(new CourseStatisticViewModel
                     {
@@ -172,6 +176,7 @@ namespace its.gamify.api.Features.Users.Queries
                         Status = "Chưa bắt đầu",
                         Remaining = $"{daysRemaining} ngày"
                     });
+                    in_completed += 1;
                 }
 
                 // Tạo initials từ tên người dùng
@@ -180,7 +185,7 @@ namespace its.gamify.api.Features.Users.Queries
                     .Select(s => s[0]));
                 if (initials.Length > 2)
                     initials = initials.Substring(0, 2);
-
+                totalProgress = in_completed + completed == 0 ? 0 : (int)((completed * 100.0) / (in_completed + completed));
                 return new UserStatisticViewModel
                 {
                     Name = user.FullName,
