@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using its.gamify.core;
+using its.gamify.core.GlobalExceptionHandling.Exceptions;
 using its.gamify.core.Models.Quarters;
 using its.gamify.domains.Entities;
 using MediatR;
@@ -17,19 +18,36 @@ namespace its.gamify.api.Features.Quarters.Commands
                 RuleFor(x => x.Name).NotNull().NotEmpty();
             }
         }
-        class CommandHandler : IRequestHandler<CreateQuaterCommand, Quarter>
+        class CommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<CreateQuaterCommand, Quarter>
         {
-            private readonly IUnitOfWork unitOfWork;
-            public CommandHandler(IUnitOfWork unitOfWork)
-            {
-                this.unitOfWork = unitOfWork;
 
+            public async Task AutoGenerateMetrics(Guid quarterId)
+            {
+
+                var users = await unitOfWork.UserRepository.GetAllAsync(withDeleted: true);
+
+                // Tạo UserMetric cho mỗi người dùng
+                foreach (var user in users)
+                {
+                    var userMetric = new UserMetric
+                    {
+                        UserId = user.Id,
+                        QuarterId = quarterId
+                    };
+
+                    await unitOfWork.UserMetricRepository.AddAsync(userMetric);
+                }
+
+                // Lưu các thay đổi vào cơ sở dữ liệu
+                await unitOfWork.SaveChangesAsync();
             }
+
             public async Task<Quarter> Handle(CreateQuaterCommand request, CancellationToken cancellationToken)
             {
                 var quarter = unitOfWork.Mapper.Map<Quarter>(request);
-                await unitOfWork.QuarterRepository.AddAsync(quarter);
+                await unitOfWork.QuarterRepository.AddAsync(quarter, cancellationToken);
                 await unitOfWork.SaveChangesAsync();
+                await AutoGenerateMetrics(quarter.Id);
                 return quarter;
             }
         }
